@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'login.dart';
 import 'register.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  _WelcomeScreenState createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  Color signInButtonColor = const Color(0xFFB4BA1C); // Initial green color
+  Color registerButtonColor = const Color(0xFFB4BA1C); // Initial green color
 
   @override
   Widget build(BuildContext context) {
@@ -47,55 +55,47 @@ class WelcomeScreen extends StatelessWidget {
                 const Text(
                   'Sacred Strings',
                   style: TextStyle(
-                    fontSize: 50,
+                    fontSize: 36, // Reduced font size
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    letterSpacing: 2,
+                    letterSpacing: 1.5,
                     shadows: [
                       Shadow(
-                        offset: Offset(0, 4),
-                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
                         color: Colors.black45,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 50),
-                // Subtitle
-                Text(
-                  'Hello and Welcome',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Decorative Line
-                Container(
-                  width: 150,
-                  height: 2,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 // Sign In Button
                 buildButton(
                   context,
                   'SIGN IN',
-                  const Color(0xFFB4BA1C),
-                  Colors.black,
+                  signInButtonColor,
+                  Colors.white,
                   const loginScreen(),
+                  (Color color) {
+                    setState(() {
+                      signInButtonColor = color;
+                    });
+                  },
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 15),
                 // Register Button
                 buildButton(
                   context,
                   'REGISTER',
-                  Colors.transparent,
+                  registerButtonColor,
                   Colors.white,
                   const RegScreen(),
+                  (Color color) {
+                    setState(() {
+                      registerButtonColor = color;
+                    });
+                  },
                 ),
-                const SizedBox(height: 60),
               ],
             ),
           ),
@@ -104,37 +104,40 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget buildButton(BuildContext context, String text, Color backgroundColor,
-      Color textColor, Widget nextPage) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => nextPage),
-        );
-      },
-      child: Container(
-        height: 50,
-        width: 250,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            )
-          ],
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+  Widget buildButton(
+    BuildContext context,
+    String text,
+    Color backgroundColor,
+    Color textColor,
+    Widget nextPage,
+    Function(Color) onColorChange,
+  ) {
+    return MouseRegion(
+      onEnter: (_) => onColorChange(Colors.white), // Change to white on hover
+      onExit: (_) => onColorChange(backgroundColor), // Revert to original color
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => nextPage),
+          );
+        },
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          height: 40,
+          width: 200,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ),
         ),
