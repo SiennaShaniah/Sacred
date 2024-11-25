@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project/AdminPage/admindashboard.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_project/IntroPages/login.dart';
-import 'package:flutter_project/UserPage/home.dart';
 
 class AuthService {
   // Signup method
@@ -89,7 +89,8 @@ class AuthService {
       _showToast('Login successful!');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (BuildContext context) => const home()),
+        MaterialPageRoute(
+            builder: (BuildContext context) => const AdminDashboard()),
       );
     } on FirebaseAuthException catch (e) {
       String message;
@@ -150,7 +151,7 @@ class AuthService {
       toastLength:
           Toast.LENGTH_SHORT, // Shorter duration for a cleaner experience
       gravity: ToastGravity.BOTTOM, // Toast appears at the bottom
-      backgroundColor: Color(
+      backgroundColor: const Color(
           0xAA333333), // A dark, semi-transparent background for a modern look
       textColor: Colors.white, // White text for readability
       fontSize: 16.0, // Slightly larger font for better legibility

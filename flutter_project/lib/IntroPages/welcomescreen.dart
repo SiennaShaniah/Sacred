@@ -123,7 +123,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           );
         },
         child: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 200),
           height: 40,
           width: 200,
           decoration: BoxDecoration(

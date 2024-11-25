@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'IntroPages/splashscreen.dart';
+import 'package:flutter_project/AdminPage/admindashboard.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: splash(),
+      home: AdminDashboard(),
     );
   }
 }
