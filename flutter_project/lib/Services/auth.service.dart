@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_project/AdminPage/admindashboard.dart';
+import 'package:flutter_project/Admin/admin.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:flutter_project/IntroPages/login.dart';
+import 'package:flutter_project/Pages/login.dart';
 
 class AuthService {
   // Signup method
@@ -89,8 +89,7 @@ class AuthService {
       _showToast('Login successful!');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (BuildContext context) => const AdminDashboard()),
+        MaterialPageRoute(builder: (BuildContext context) => const Admin()),
       );
     } on FirebaseAuthException catch (e) {
       String message;
