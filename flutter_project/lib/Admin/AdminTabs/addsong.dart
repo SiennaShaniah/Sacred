@@ -49,13 +49,46 @@ class AddSongTab extends StatelessWidget {
                 'Add Artist',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Enter Artist Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+              Row(
+                children: [
+                  // Text Field for entering the artist name
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Enter Artist Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16), // Adjust padding
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(
+                      width: 8), // Space between the TextField and Button
+                  // Circular Save Button
+                  SizedBox(
+                    height: 48, // Matches the height of the TextField
+                    width: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Handle save artist logic
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape:
+                            const CircleBorder(), // Makes the button circular
+                        backgroundColor:
+                            const Color(0xFFB4BA1C), // Button color
+                        padding:
+                            EdgeInsets.zero, // Removes default button padding
+                      ),
+                      child: const Icon(
+                        Icons.check, // Check icon
+                        color: Colors.black, // Icon color
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
