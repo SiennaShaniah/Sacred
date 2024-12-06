@@ -1,27 +1,109 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Tab for Add Song content
-class AddSongTab extends StatelessWidget {
+class AddSongTab extends StatefulWidget {
   const AddSongTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Sample data for dropdowns
-    final List<String> artists = ['Artist 1', 'Artist 2', 'Artist 3'];
-    final List<String> keys = ['C', 'D', 'E', 'F', 'G'];
-    final List<String> songTypes = [
-      'Pop',
-      'Rock',
-      'Jazz',
-      'Classical'
-    ]; // Song Types
-    final List<String> languages = [
-      'English',
-      'Spanish',
-      'French',
-      'Italian'
-    ]; // Song Languages
+  State<AddSongTab> createState() => _AddSongTabState();
+}
 
+class _AddSongTabState extends State<AddSongTab> {
+  final _firestore = FirebaseFirestore.instance;
+
+  // Controllers for text fields
+  final _artistController = TextEditingController();
+  final _songTitleController = TextEditingController();
+  final _chordsAndLyricsController = TextEditingController();
+  final _linkController = TextEditingController();
+
+  // State variables
+  String? selectedArtist;
+  String? selectedKey;
+  String? selectedSongType;
+  String? selectedLanguage;
+  String? selectedImagePath;
+
+  // Image options from the assets folder
+  final List<String> imagePaths = [
+    'lib/Images/imagesDropdown/ElevationWorship.jpg',
+    'lib/Images/imagesDropdown/CastingCrowns.jpg',
+  ];
+
+  // Dropdown options
+  List<String> artists = [];
+  final List<String> keys = [
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B'
+  ];
+  final List<String> songTypes = ['Praise And Worship', 'Hymnal'];
+  final List<String> languages = ['English', 'Tagalog', 'Cebuano'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArtists(); // Load artists from Firestore
+  }
+
+  Future<void> _loadArtists() async {
+    final snapshot = await _firestore.collection('artists').get();
+    setState(() {
+      artists = snapshot.docs.map((doc) => doc['name'] as String).toList();
+    });
+  }
+
+  Future<void> _saveSong() async {
+    if (_songTitleController.text.isNotEmpty &&
+        selectedArtist != null &&
+        selectedKey != null &&
+        _chordsAndLyricsController.text.isNotEmpty &&
+        selectedSongType != null &&
+        selectedLanguage != null) {
+      await _firestore.collection('songs').add({
+        'title': _songTitleController.text,
+        'artist': selectedArtist,
+        'key': selectedKey,
+        'chordsAndLyrics': _chordsAndLyricsController.text,
+        'type': selectedSongType,
+        'language': selectedLanguage,
+        'link': _linkController.text,
+        'imagePath': selectedImagePath, // Save selected image path
+        'timestamp': FieldValue.serverTimestamp(), // Add timestamp field
+      });
+
+      _clearFields();
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Song saved successfully')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all required fields')));
+    }
+  }
+
+  void _clearFields() {
+    _songTitleController.clear();
+    _chordsAndLyricsController.clear();
+    _linkController.clear();
+    selectedArtist = null;
+    selectedKey = null;
+    selectedSongType = null;
+    selectedLanguage = null;
+    selectedImagePath = null;
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,282 +111,158 @@ class AddSongTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
-              const Padding(
-                padding:
-                    EdgeInsets.only(top: 8.0), // Adjust top padding as needed
-                child: Text(
-                  'Add Song',
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black, // Title color remains black
-                  ),
-                ),
-              ),
+              const Text('Add Song',
+                  style:
+                      TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
 
-              // Artist Section
-              const Text(
-                'Add Artist',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              // Add Artist
+              const Text('Add Artist',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               Row(
                 children: [
-                  // Text Field for entering the artist name
                   Expanded(
                     child: TextField(
+                      controller: _artistController,
                       decoration: InputDecoration(
                         hintText: 'Enter Artist Name',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16), // Adjust padding
+                            borderRadius: BorderRadius.circular(8.0)),
                       ),
                     ),
                   ),
-                  const SizedBox(
-                      width: 8), // Space between the TextField and Button
-                  // Circular Save Button
-                  SizedBox(
-                    height: 48, // Matches the height of the TextField
-                    width: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Handle save artist logic
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape:
-                            const CircleBorder(), // Makes the button circular
-                        backgroundColor:
-                            const Color(0xFFB4BA1C), // Button color
-                        padding:
-                            EdgeInsets.zero, // Removes default button padding
-                      ),
-                      child: const Icon(
-                        Icons.check, // Check icon
-                        color: Colors.black, // Icon color
-                      ),
-                    ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _addArtist,
+                    style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        backgroundColor: const Color(0xFFB4BA1C)),
+                    child: const Icon(Icons.check, color: Colors.black),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // Add Image Section
-              const Text(
-                'Add Image',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Handle image selection logic here
+              // Add Image - Dropdown
+              const Text('Select Image',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              DropdownButtonFormField<String>(
+                value: selectedImagePath,
+                items: imagePaths
+                    .map((path) => DropdownMenuItem(
+                          value: path,
+                          child: Text(path.split('/').last),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedImagePath = value;
+                  });
                 },
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: const Icon(
-                    Icons.add,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Song Title
-              const Text(
-                'Song Title',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Enter Song Title',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Song Artist Dropdown
-              const Text(
-                'Song Artist',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+                      borderRadius: BorderRadius.circular(8.0)),
                 ),
-                items: artists
-                    .map(
-                      (artist) => DropdownMenuItem<String>(
-                        value: artist,
-                        child: Text(artist),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {},
-                hint: const Text('Select Artist'),
+                hint: const Text('Select an image'),
               ),
               const SizedBox(height: 20),
 
-              // Original Key Dropdown
-              const Text(
-                'Original Key',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                items: keys
-                    .map(
-                      (key) => DropdownMenuItem<String>(
-                        value: key,
-                        child: Text(key),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {},
-                hint: const Text('Select Original Key'),
-              ),
+              // Other Input Fields
+              _buildTextField('Song Title', _songTitleController),
+              _buildDropdown('Song Artist', artists, selectedArtist,
+                  (value) => setState(() => selectedArtist = value)),
+              _buildDropdown('Original Key', keys, selectedKey,
+                  (value) => setState(() => selectedKey = value)),
+              _buildTextField('Chords and Lyrics', _chordsAndLyricsController,
+                  maxLines: 6),
+              _buildDropdown('Song Type', songTypes, selectedSongType,
+                  (value) => setState(() => selectedSongType = value)),
+              _buildDropdown('Song Language', languages, selectedLanguage,
+                  (value) => setState(() => selectedLanguage = value)),
+              _buildTextField('Link', _linkController),
               const SizedBox(height: 20),
 
-              // Chords and Lyrics
-              const Text(
-                'Chords and Lyrics',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                maxLines: 6,
-                decoration: InputDecoration(
-                  hintText: 'Enter Chords and Lyrics...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Song Type Dropdown
-              const Text(
-                'Song Type',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                items: songTypes
-                    .map(
-                      (type) => DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {},
-                hint: const Text('Select Song Type'),
-              ),
-              const SizedBox(height: 20),
-
-              // Song Language Dropdown
-              const Text(
-                'Song Language',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                items: languages
-                    .map(
-                      (language) => DropdownMenuItem<String>(
-                        value: language,
-                        child: Text(language),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {},
-                hint: const Text('Select Song Language'),
-              ),
-              const SizedBox(height: 20),
-
-              // Link
-              const Text(
-                'Link',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Enter Link',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Buttons Section
+              // Buttons
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Aligns the buttons to the right
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // Handle Clear logic
-                    },
-                    icon: const Icon(Icons.clear),
-                    label: const Text(
-                      'Clear',
-                      style: TextStyle(
-                          color: Colors.black), // Set text color to black
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB4BA1C), // Green color
-                      minimumSize: const Size(100, 40),
-                      foregroundColor:
-                          Colors.black, // Set text color to black for button
-                    ),
-                  ),
-                  const SizedBox(width: 10), // Spacing between the buttons
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // Handle Save logic
-                    },
-                    icon: const Icon(Icons.save),
-                    label: const Text(
-                      'Save',
-                      style: TextStyle(
-                          color: Colors.black), // Set text color to black
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB4BA1C), // Green color
-                      minimumSize: const Size(100, 40),
-                      foregroundColor:
-                          Colors.black, // Set text color to black for button
-                    ),
-                  ),
+                  _buildButton('Clear', Icons.clear, _clearFields),
+                  const SizedBox(width: 10),
+                  _buildButton('Save', Icons.save, _saveSong),
                 ],
-              )
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller,
+      {int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: 'Enter $label',
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildDropdown(String label, List<String> items, String? selectedValue,
+      ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedValue,
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+          ),
+          hint: Text('Select $label'),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildButton(String label, IconData icon, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.black),
+      label: Text(label, style: const TextStyle(color: Colors.black)),
+      style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFB4BA1C),
+          minimumSize: const Size(100, 40)),
+    );
+  }
+
+  Future<void> _addArtist() async {
+    if (_artistController.text.isNotEmpty) {
+      await _firestore
+          .collection('artists')
+          .add({'name': _artistController.text});
+      _artistController.clear();
+      _loadArtists(); // Refresh the artist list
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Artist added successfully')));
+    }
   }
 }

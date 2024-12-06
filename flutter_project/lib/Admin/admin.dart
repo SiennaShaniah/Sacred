@@ -6,7 +6,6 @@ import 'AdminTabs/devotion.dart';
 import 'AdminTabs/listdevotion.dart';
 import 'AdminTabs/songarchive.dart';
 import 'AdminTabs/songlist.dart';
-import 'AdminTabs/usermanage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -149,39 +148,33 @@ class _AdminDashboardState extends State<Admin> {
             ),
             _buildDrawerItem(
               context,
-              icon: Icons.people,
-              title: 'Manage Users',
-              index: 1,
-            ),
-            _buildDrawerItem(
-              context,
               icon: Icons.add,
               title: 'Add Song',
-              index: 2,
+              index: 1,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.library_music,
               title: 'Song List',
-              index: 3,
+              index: 2,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.archive,
               title: 'Archive',
-              index: 4,
+              index: 3,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.book,
               title: 'Add Daily Devotional',
-              index: 6,
+              index: 4,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.list,
               title: 'Daily Devotional List',
-              index: 7,
+              index: 5,
             ),
             _buildDrawerItem(
               context,
@@ -232,16 +225,14 @@ class _AdminDashboardState extends State<Admin> {
       case 0:
         return const DashboardTab();
       case 1:
-        return const ManageUsersTab();
+        return AddSongTab();
       case 2:
-        return const AddSongTab();
-      case 3:
         return SongListTab();
-      case 4:
+      case 3:
         return const ArchiveTab();
-      case 6:
+      case 4:
         return const AddDailyDevotionalTab();
-      case 7:
+      case 5:
         return const DailyDevotionalListTab();
       default:
         return const Center(child: Text('Select a tab'));
