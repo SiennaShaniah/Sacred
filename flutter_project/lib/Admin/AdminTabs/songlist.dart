@@ -25,11 +25,11 @@ class SongListTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Align(
+        const Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 16.0, top: 32.0),
-            child: const Text(
+            padding: EdgeInsets.only(left: 16.0, top: 32.0),
+            child: Text(
               'Song List',
               style: TextStyle(
                 fontSize: 20.0,
@@ -84,20 +84,20 @@ class SongListTab extends StatelessWidget {
                     },
                     itemBuilder: (BuildContext context) {
                       return [
-                        PopupMenuItem<String>(
+                        const PopupMenuItem<String>(
                           value: 'edit',
                           child: Row(
-                            children: const [
+                            children: [
                               Icon(Icons.edit, color: Color(0xFFB4BA1C)),
                               SizedBox(width: 8),
                               Text('Edit'),
                             ],
                           ),
                         ),
-                        PopupMenuItem<String>(
+                        const PopupMenuItem<String>(
                           value: 'archive',
                           child: Row(
-                            children: const [
+                            children: [
                               Icon(Icons.archive, color: Color(0xFFB4BA1C)),
                               SizedBox(width: 8),
                               Text('Archive'),
@@ -237,12 +237,12 @@ class SongListTab extends StatelessWidget {
                 );
                 Navigator.of(context).pop();
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB4BA1C),
+              ),
               child: const Text(
                 'Update',
                 style: TextStyle(color: Colors.black),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB4BA1C),
               ),
             ),
           ],

@@ -44,8 +44,11 @@ class _AdminDashboardState extends State<Admin> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize
+              .min, // Ensures the Row doesn't take up the entire width
           children: [
+            const SizedBox(
+                width: 8), // Adds a small space between the icon and text
             RichText(
               text: const TextSpan(
                 children: [
@@ -103,7 +106,7 @@ class _AdminDashboardState extends State<Admin> {
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Roboto',
                             color: Colors.white,
-                            fontSize: 26,
+                            fontSize: 34,
                           ),
                         ),
                         TextSpan(
@@ -113,7 +116,7 @@ class _AdminDashboardState extends State<Admin> {
                             fontStyle: FontStyle.italic,
                             fontFamily: 'Roboto',
                             color: Color(0xFFB4BA1C),
-                            fontSize: 26,
+                            fontSize: 34,
                           ),
                         ),
                         TextSpan(
@@ -233,13 +236,13 @@ class _AdminDashboardState extends State<Admin> {
       case 2:
         return const AddSongTab();
       case 3:
-        return SongListTab(); // Remove the 'const' here
+        return SongListTab();
       case 4:
         return const ArchiveTab();
       case 6:
         return const AddDailyDevotionalTab();
       case 7:
-        return const DailyDevotionalListTab(); // Remove the 'const' here
+        return const DailyDevotionalListTab();
       default:
         return const Center(child: Text('Select a tab'));
     }

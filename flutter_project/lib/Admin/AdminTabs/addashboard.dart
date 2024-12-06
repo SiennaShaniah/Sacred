@@ -11,11 +11,12 @@ class DashboardTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Admin Dashboard Title
           Container(
             width: 362, // Fixed width
             height: 47, // Fixed height
             decoration: BoxDecoration(
-              color: const Color(0xFFB4BA1C), // Background color
+              color: const Color(0xFFB4BA1C), // Original color
               borderRadius: BorderRadius.circular(20), // Rounded corners
             ),
             child: Center(
@@ -30,6 +31,8 @@ class DashboardTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+
+          // GridView for stats cards
           GridView.count(
             shrinkWrap: true,
             crossAxisCount: 2,
@@ -39,21 +42,36 @@ class DashboardTab extends StatelessWidget {
               _buildStatCard('USERS', '0'),
               _buildStatCard('SONGS', '0'),
               _buildStatCard('ARTISTS', '0'),
-              _buildStatCard('SONG REQUESTS', '0'),
+              _buildStatCard('DEVOTIONALS', '0'),
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Stats',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFB4BA1C),
+
+          // Stats Title - styled like Admin Dashboard (Removed opacity)
+          Container(
+            width: 362, // Fixed width
+            height: 47, // Fixed height
+            decoration: BoxDecoration(
+              color: const Color(0xFFB4BA1C), // Full opacity color
+              borderRadius: BorderRadius.circular(20), // Rounded corners
+            ),
+            child: Center(
+              child: Text(
+                'Stats'.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // White text color
+                ),
+              ),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Stats Data Section
           Container(
             padding: const EdgeInsets.all(16),
-            color: const Color(0xFFB4BA1C),
+            color: const Color(0xFFB4BA1C), // Full opacity color
             child: const Text(
               'Stats Data Goes Here',
               style: TextStyle(color: Colors.white),
@@ -67,36 +85,45 @@ class DashboardTab extends StatelessWidget {
   // Helper method to build the stat cards
   Widget _buildStatCard(String title, String count) {
     return Card(
-      color: const Color(0xFFB4BA1C),
+      color: const Color(0xFFB4BA1C).withOpacity(0.5), // Full opacity color
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              count,
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            child: Center(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFB4BA1C),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                count,
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-
-// Tab for Manage Users content
