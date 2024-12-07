@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SongListTab extends StatefulWidget {
-  SongListTab({super.key});
+  const SongListTab({super.key});
 
   @override
   State<SongListTab> createState() => _SongListTabState();
@@ -24,20 +24,33 @@ class _SongListTabState extends State<SongListTab> {
   }
 
   Future<void> _loadSongs() async {
-    final snapshot = await _firestore.collection('songs').get();
-    setState(() {
-      songs = snapshot.docs.map((doc) {
-        return {
-          "id": doc.id,
-          "title": doc['title'],
-          "artist": doc['artist'],
-          "image": doc['imagePath'],
-          "language": doc['language'],
-          "type": doc['type']
-        };
-      }).toList();
-      filteredSongs = List.from(songs); // Initially display all songs
-    });
+    try {
+      final snapshot = await _firestore.collection('songs').get();
+      setState(() {
+        songs = snapshot.docs.map((doc) {
+          return {
+            "id": doc.id,
+            "title": doc['title'] ?? 'No Title',
+            "artist": doc['artist'] ?? 'Unknown Artist',
+            "image": doc['imagePath'] ?? '',
+            "language": doc['language'] ?? 'Unknown Language',
+            "type": doc['type'] ?? 'Unknown Type',
+            "original_key": doc.data().containsKey('original_key')
+                ? doc['original_key']
+                : 'N/A',
+            "chords": doc['chords'] ?? 'N/A',
+            "lyrics": doc['lyrics'] ?? '',
+            "song_link": doc['song_link'] ?? '',
+          };
+        }).toList();
+        filteredSongs = List.from(songs); // Initially display all songs
+      });
+    } catch (e) {
+      print("Error loading songs: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error loading songs: $e")),
+      );
+    }
   }
 
   void _filterByLanguage(String language) {
@@ -98,9 +111,9 @@ class _SongListTabState extends State<SongListTab> {
 
     // Extract artist names and remove duplicates using a Set
     Set<String> artistsSet = {};
-    snapshot.docs.forEach((doc) {
+    for (var doc in snapshot.docs) {
       artistsSet.add(doc['artist'].toString());
-    });
+    }
 
     // Convert the set to a list
     List<String> artists = artistsSet.toList();
@@ -352,117 +365,65 @@ class _SongListTabState extends State<SongListTab> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Song'),
+          title: const Text('Edit Song'),
           content: SingleChildScrollView(
             child: Column(
               children: [
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: artistController,
-                  decoration: InputDecoration(
-                    labelText: 'Artist',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: languageController,
-                  decoration: InputDecoration(
-                    labelText: 'Language',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: typeController,
-                  decoration: InputDecoration(
-                    labelText: 'Type',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: imageUrlController,
-                  decoration: InputDecoration(
-                    labelText: 'Song Image URL',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: originalKeyController,
-                  decoration: InputDecoration(
-                    labelText: 'Original Key',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: chordsController,
-                  decoration: InputDecoration(
-                    labelText: 'Chords',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: lyricsController,
-                  decoration: InputDecoration(
-                    labelText: 'Lyrics',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 5,
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  controller: songLinkController,
-                  decoration: InputDecoration(
-                    labelText: 'Song Link',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+                _buildTextField('Title', titleController),
+                _buildTextField('Artist', artistController),
+                _buildTextField('Language', languageController),
+                _buildTextField('Type', typeController),
+                _buildTextField('Image URL', imageUrlController),
+                _buildTextField('Original Key', originalKeyController),
+                _buildTextField('Chords', chordsController),
+                _buildTextField('Lyrics', lyricsController),
+                _buildTextField('Song Link', songLinkController),
               ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
+                // Prepare the updated song data
+                Map<String, dynamic> updatedSong = {
+                  'title': titleController.text,
+                  'artist': artistController.text,
+                  'language': languageController.text,
+                  'type': typeController.text,
+                  'image': imageUrlController.text,
+                  'original_key': originalKeyController.text,
+                  'chords': chordsController.text,
+                  'lyrics': lyricsController.text,
+                  'song_link': songLinkController.text,
+                };
+
+                // Update the song in Firestore
+                _updateSong(song['id'], updatedSong);
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Save Changes'),
             ),
             TextButton(
               onPressed: () {
-                _updateSong(
-                  song["id"],
-                  {
-                    'title': titleController.text,
-                    'artist': artistController.text,
-                    'language': languageController.text,
-                    'type': typeController.text,
-                    'image': imageUrlController.text,
-                    'original_key': originalKeyController.text,
-                    'chords': chordsController.text,
-                    'lyrics': lyricsController.text,
-                    'song_link': songLinkController.text,
-                  },
-                );
                 Navigator.of(context).pop();
               },
-              child: Text('Update'),
+              child: const Text('Cancel'),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(labelText: label),
+      ),
     );
   }
 }

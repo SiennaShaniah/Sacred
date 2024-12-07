@@ -28,6 +28,7 @@ class _AddSongTabState extends State<AddSongTab> {
   final List<String> imagePaths = [
     'lib/Images/imagesDropdown/ElevationWorship.jpg',
     'lib/Images/imagesDropdown/CastingCrowns.jpg',
+    'lib/Images/imagesDropdown/MjFlores.jpg'
   ];
 
   // Dropdown options
@@ -79,6 +80,7 @@ class _AddSongTabState extends State<AddSongTab> {
         'link': _linkController.text,
         'imagePath': selectedImagePath, // Save selected image path
         'timestamp': FieldValue.serverTimestamp(), // Add timestamp field
+        'isFavorite': false, // Default value for the new field
       });
 
       _clearFields();
