@@ -4,7 +4,6 @@ import 'AdminTabs/addashboard.dart';
 import 'AdminTabs/addsong.dart';
 import 'AdminTabs/devotion.dart';
 import 'AdminTabs/listdevotion.dart';
-import 'AdminTabs/songarchive.dart';
 import 'AdminTabs/songlist.dart';
 
 void main() {
@@ -43,11 +42,22 @@ class _AdminDashboardState extends State<Admin> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Row(
-          mainAxisSize: MainAxisSize
-              .min, // Ensures the Row doesn't take up the entire width
           children: [
-            const SizedBox(
-                width: 8), // Adds a small space between the icon and text
+            const Text(
+              'SacredStrings Admin',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Flexible(
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage(
+                    'lib/Images/adminprofile.jpg'), // Replace with your image path
+              ),
+            ),
           ],
         ),
         backgroundColor: const Color(0xFFB4BA1C),
@@ -73,7 +83,7 @@ class _AdminDashboardState extends State<Admin> {
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Roboto',
                             color: Colors.white,
-                            fontSize: 34,
+                            fontSize: 30, // Adjusted font size
                           ),
                         ),
                         TextSpan(
@@ -83,27 +93,49 @@ class _AdminDashboardState extends State<Admin> {
                             fontStyle: FontStyle.italic,
                             fontFamily: 'Roboto',
                             color: Color(0xFFB4BA1C),
-                            fontSize: 34,
+                            fontSize: 30, // Adjusted font size
                           ),
                         ),
                         TextSpan(
                           text: '.',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 26,
+                            fontSize: 24, // Adjusted font size
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Admin Page',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 25, // Adjusted size
+                        backgroundImage: AssetImage(
+                            'lib/Images/adminprofile.jpg'), // Replace with your image path
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Shienna Laredo',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 14, // Adjusted font size
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'shiennalaredo1617@gmail.com',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 12, // Adjusted font size
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -128,21 +160,15 @@ class _AdminDashboardState extends State<Admin> {
             ),
             _buildDrawerItem(
               context,
-              icon: Icons.archive,
-              title: 'Archive',
-              index: 3,
-            ),
-            _buildDrawerItem(
-              context,
               icon: Icons.book,
               title: 'Add Daily Devotional',
-              index: 4,
+              index: 3,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.list,
               title: 'Daily Devotional List',
-              index: 5,
+              index: 4,
             ),
             _buildDrawerItem(
               context,
@@ -153,7 +179,9 @@ class _AdminDashboardState extends State<Admin> {
           ],
         ),
       ),
-      body: _getSelectedTabContent(),
+      body: SafeArea(
+        child: _getSelectedTabContent(),
+      ),
     );
   }
 
@@ -197,10 +225,8 @@ class _AdminDashboardState extends State<Admin> {
       case 2:
         return SongListTab();
       case 3:
-        return const ArchiveTab();
-      case 4:
         return const AddDailyDevotionalTab();
-      case 5:
+      case 4:
         return const DailyDevotionalListTab();
       default:
         return const Center(child: Text('Select a tab'));

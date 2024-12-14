@@ -272,7 +272,7 @@ class _SongListTabState extends State<SongListTab> {
                     _filterByArtist(artist);
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );

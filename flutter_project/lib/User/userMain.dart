@@ -41,108 +41,153 @@ class _AdminDashboardState extends State<User> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Container(), // Remove the title
         backgroundColor: const Color(0xFFB4BA1C),
-      ),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
+        title: Row(
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color(0x80B4BA1C),
+            const Text(
+              'SacredStrings',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                color: Colors.white,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: const TextSpan(
+            ),
+            const Spacer(), // This will push the profile picture to the right
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: AssetImage(
+                  'lib/Images/adminprofile.jpg'), // Replace with your image path
+            ),
+          ],
+        ),
+      ),
+      drawer: Container(
+        width: 325, // Set the desired width of the sidebar here
+        child: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(
+                  color: Color(0x80B4BA1C),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Sacred',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Roboto',
+                              color: Colors.white,
+                              fontSize: 34,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Strings',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'Roboto',
+                              color: Color(0xFFB4BA1C),
+                              fontSize: 34,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '.',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        TextSpan(
-                          text: 'Sacred',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Roboto',
-                            color: Colors.white,
-                            fontSize: 34,
-                          ),
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundImage: AssetImage(
+                              'lib/Images/adminprofile.jpg'), // Profile image path
                         ),
-                        TextSpan(
-                          text: 'Strings',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
-                            fontFamily: 'Roboto',
-                            color: Color(0xFFB4BA1C),
-                            fontSize: 34,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Shienna Laredo',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'shiennalaredo1617@gmail.com',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Admin Page',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.dashboard,
-              title: 'Song List',
-              index: 0,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.add,
-              title: 'Favorites',
-              index: 1,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.library_music,
-              title: 'My Line Up',
-              index: 2,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.archive,
-              title: 'My Songs',
-              index: 3,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.book,
-              title: 'Tools',
-              index: 4,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.list,
-              title: 'Daily Devotional',
-              index: 5,
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.exit_to_app,
-              title: 'Log Out',
-              index: -1,
-            ),
-          ],
+              _buildDrawerItem(
+                context,
+                icon: Icons.dashboard,
+                title: 'Song List',
+                index: 0,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.add,
+                title: 'Favorites',
+                index: 1,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.library_music,
+                title: 'My Line Up',
+                index: 2,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.archive,
+                title: 'My Songs',
+                index: 3,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.book,
+                title: 'Tools',
+                index: 4,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.list,
+                title: 'Daily Devotional',
+                index: 5,
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.exit_to_app,
+                title: 'Log Out',
+                index: -1,
+              ),
+            ],
+          ),
         ),
       ),
       body: _getSelectedTabContent(),

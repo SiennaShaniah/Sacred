@@ -26,7 +26,7 @@ class DailyDevotionalListTab extends StatelessWidget {
           child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('devotionals')
-                .orderBy('date', descending: true) // Sort by date
+                .orderBy('date', descending: true)
                 .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,20 +45,18 @@ class DailyDevotionalListTab extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 10.0,
                   mainAxisSpacing: 10.0,
-                  childAspectRatio: 0.75, // Adjust this value if necessary
+                  childAspectRatio: 0.75,
                 ),
                 itemCount: devotionals.length,
                 itemBuilder: (context, index) {
                   final devotional = devotionals[index];
 
                   return Card(
-                    color:
-                        const Color(0xFFB4BA1C).withOpacity(0.5), // 50% opacity
+                    color: const Color(0xFFB4BA1C).withOpacity(0.5),
                     elevation: 3.0,
                     margin: const EdgeInsets.symmetric(vertical: 4.0),
                     child: Column(
-                      mainAxisSize: MainAxisSize
-                          .max, // Allow card to take available height
+                      mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Stack(
@@ -66,9 +64,9 @@ class DailyDevotionalListTab extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(5),
                               child: Image.asset(
-                                'lib/Images/bible3.jpg', // Local image path
+                                'lib/Images/bible3.jpg',
                                 width: double.infinity,
-                                height: 150, // Increased height for the image
+                                height: 150,
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -79,7 +77,7 @@ class DailyDevotionalListTab extends StatelessWidget {
                                 icon: const Icon(
                                   Icons.more_vert,
                                   color: Colors.white,
-                                  size: 30, // Bigger size for the menu button
+                                  size: 30,
                                 ),
                                 onSelected: (String value) {
                                   if (value == 'edit') {
@@ -123,21 +121,16 @@ class DailyDevotionalListTab extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Title text now takes more space
                               Text(
                                 devotional['title'],
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
                                 ),
-                                overflow: TextOverflow
-                                    .ellipsis, // Truncate if text overflows
-                                softWrap:
-                                    true, // Allow text to wrap to the next line
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
                               ),
-                              const SizedBox(
-                                  height: 8), // Space between title and date
-                              // Formatted Date
+                              const SizedBox(height: 8),
                               Text(
                                 _formatDate(devotional['date']),
                                 style: const TextStyle(
@@ -159,14 +152,11 @@ class DailyDevotionalListTab extends StatelessWidget {
     );
   }
 
-  // Function to format date string (remove T00:00:00)
   String _formatDate(String date) {
     DateTime parsedDate = DateTime.parse(date);
-    return "${parsedDate.toLocal()}"
-        .split(' ')[0]; // Returns only the date part
+    return "${parsedDate.toLocal()}".split(' ')[0];
   }
 
-  // Function to show the edit form popup
   void _showEditForm(BuildContext context, QueryDocumentSnapshot devotional) {
     final TextEditingController titleController =
         TextEditingController(text: devotional['title']);
@@ -183,8 +173,7 @@ class DailyDevotionalListTab extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Aligning to the left
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Edit Devotional: ',
@@ -192,7 +181,7 @@ class DailyDevotionalListTab extends StatelessWidget {
                     color: Color(0xFFB4BA1C), fontWeight: FontWeight.bold),
               ),
               Text(
-                devotional['title'], // Display the dynamic title here
+                devotional['title'],
                 style: const TextStyle(
                     color: Color.fromARGB(255, 0, 0, 0), fontSize: 20),
               ),
@@ -203,26 +192,24 @@ class DailyDevotionalListTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Date Picker as TextField
                   Focus(
-                    onFocusChange: (hasFocus) {
-                      if (!hasFocus) {
-                        // You can change the border color after focus loss if needed
-                      }
-                    },
+                    onFocusChange: (hasFocus) {},
                     child: TextFormField(
                       focusNode: dateFocusNode,
-                      readOnly: true, // Prevent keyboard from showing
+                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Date',
                         hintText: "${selectedDate.toLocal()}".split(' ')[0],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(
-                            color: dateFocusNode.hasFocus
-                                ? const Color(0xFFB4BA1C)
-                                : Colors.black26,
-                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Color(0xFFB4BA1C), width: 2.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Colors.black26, width: 1.5),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 16),
@@ -233,6 +220,23 @@ class DailyDevotionalListTab extends StatelessWidget {
                           initialDate: selectedDate,
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2101),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: Color(0xFFB4BA1C),
+                                  onPrimary: Colors.white,
+                                  onSurface: Colors.black,
+                                ),
+                                textButtonTheme: TextButtonThemeData(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Color(0xFFB4BA1C),
+                                  ),
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
                         );
                         if (picked != null && picked != selectedDate) {
                           selectedDate = picked;
@@ -270,7 +274,6 @@ class DailyDevotionalListTab extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Update Firestore
                 FirebaseFirestore.instance
                     .collection('devotionals')
                     .doc(devotional.id)
@@ -300,7 +303,6 @@ class DailyDevotionalListTab extends StatelessWidget {
     );
   }
 
-  // Helper method to create box-styled text fields
   Widget _buildBoxTextField({
     required TextEditingController controller,
     required String label,
@@ -316,6 +318,12 @@ class DailyDevotionalListTab extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Colors.black26, width: 1.5),
+          ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         ),
@@ -323,11 +331,9 @@ class DailyDevotionalListTab extends StatelessWidget {
     );
   }
 
-  // Function to delete the devotional from Firestore
   void _deleteDevotional(BuildContext context, String docId) {
     FirebaseFirestore.instance.collection('devotionals').doc(docId).delete();
 
-    // Show snackbar using the correct context
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Devotional deleted successfully!')),
     );

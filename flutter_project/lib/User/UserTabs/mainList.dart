@@ -10,17 +10,17 @@ class MainList extends StatefulWidget {
 
 class _MainListState extends State<MainList> {
   List<Map<String, dynamic>> songs = [];
-  List<String> artistList = []; // List to store artists
+  List<Map<String, dynamic>> filteredSongs = [];
+  String selectedLanguage = 'All Languages';
+  String selectedType = 'All Types';
   String? selectedArtist;
-  String? selectedType;
-  String? selectedLanguage;
+  List<String> artists = []; // List to store artists
 
   // Initialize the list of songs
   @override
   void initState() {
     super.initState();
     fetchSongs();
-    fetchArtists(); // Fetch artists for filtering
   }
 
   // Fetch songs data from Firestore
@@ -37,33 +37,208 @@ class _MainListState extends State<MainList> {
             'image': doc['imagePath'],
             'isFavorite': doc['isFavorite'] ?? false,
             'id': doc.id,
-            'type':
-                doc['type'], // Assume songs have 'type' and 'language' fields
+            'type': doc['type'],
             'language': doc['language'],
           };
         }).toList();
+
+        // Initialize filteredSongs to be the same as the original songs list
+        filteredSongs = List.from(songs);
+
+        // Get a list of artists for filtering
+        artists =
+            songs.map((song) => song['artist'] as String).toSet().toList();
       });
     } catch (e) {
       print("Error fetching songs: $e");
     }
   }
 
-  // Fetch artists from Firestore
-  Future<void> fetchArtists() async {
-    try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('artists').get();
+  // Filter songs by language
+  void _filterByLanguage(String language) {
+    setState(() {
+      selectedLanguage = language;
+      filteredSongs = songs.where((song) {
+        return language == 'All Languages' || song['language'] == language;
+      }).toList();
+    });
+  }
 
-      setState(() {
-        artistList = querySnapshot.docs.map((doc) {
-          return doc['name'] as String; // Explicitly cast the field to a String
-        }).toList();
-        artistList.insert(
-            0, 'All Artists'); // Add 'All Artists' as the first option
-      });
-    } catch (e) {
-      print("Error fetching artists: $e");
-    }
+  // Filter songs by type
+  void _filterByType(String type) {
+    setState(() {
+      selectedType = type;
+      filteredSongs = songs.where((song) {
+        return type == 'All Types' || song['type'] == type;
+      }).toList();
+    });
+  }
+
+  // Filter songs by artist
+  void _filterByArtist(String? artist) {
+    setState(() {
+      selectedArtist = artist;
+      filteredSongs = songs.where((song) {
+        return artist == null || song['artist'] == artist;
+      }).toList();
+    });
+  }
+
+  // Show filter options
+  void _showFilterOptions() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter By'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                ListTile(
+                  title: const Text('Language'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showLanguageFilterDialog();
+                  },
+                ),
+                Divider(color: Color(0xFFB4BA1C)), // Divider color changed
+                ListTile(
+                  title: const Text('Type'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showTypeFilterDialog();
+                  },
+                ),
+                Divider(color: Color(0xFFB4BA1C)), // Divider color changed
+                ListTile(
+                  title: const Text('Artist'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showArtistFilterDialog();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Language selection dialog
+  void _showLanguageFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Language'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Languages'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('All Languages');
+                },
+              ),
+              ListTile(
+                title: const Text('English'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('English');
+                },
+              ),
+              ListTile(
+                title: const Text('Tagalog'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('Tagalog');
+                },
+              ),
+              ListTile(
+                title: const Text('Cebuano'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('Cebuano');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Type selection dialog
+  void _showTypeFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Types'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('All Types');
+                },
+              ),
+              ListTile(
+                title: const Text('Praise And Worship'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('Praise And Worship');
+                },
+              ),
+              ListTile(
+                title: const Text('Hymnal'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('Hymnal');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Artist selection dialog
+  void _showArtistFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Artist'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Artists'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByArtist(null);
+                },
+              ),
+              ...artists.map((artist) {
+                return ListTile(
+                  title: Text(artist),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _filterByArtist(artist);
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // Toggle favorite state and update Firestore
@@ -79,102 +254,13 @@ class _MainListState extends State<MainList> {
     }
   }
 
-  // Show filter dialog
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Filter Songs'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Filter by Artist
-              DropdownButtonFormField<String>(
-                value: selectedArtist,
-                hint: const Text('Select Artist'),
-                onChanged: (value) {
-                  setState(() {
-                    selectedArtist = value;
-                  });
-                },
-                items: artistList
-                    .map((artist) => DropdownMenuItem<String>(
-                          value: artist,
-                          child: Text(artist),
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 10),
-              // Filter by Type
-              DropdownButtonFormField<String>(
-                value: selectedType,
-                hint: const Text('Select Type'),
-                onChanged: (value) {
-                  setState(() {
-                    selectedType = value;
-                  });
-                },
-                items: <String>['Praise and Worship', 'Hymnals']
-                    .map((type) => DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 10),
-              // Filter by Language
-              DropdownButtonFormField<String>(
-                value: selectedLanguage,
-                hint: const Text('Select Language'),
-                onChanged: (value) {
-                  setState(() {
-                    selectedLanguage = value;
-                  });
-                },
-                items: <String>['English', 'Tagalog', 'Cebuano']
-                    .map((language) => DropdownMenuItem<String>(
-                          value: language,
-                          child: Text(language),
-                        ))
-                    .toList(),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                fetchSongs(); // Re-fetch songs after applying filter
-              },
-              child: const Text('Apply Filter'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  selectedArtist = null;
-                  selectedType = null;
-                  selectedLanguage = null;
-                });
-                Navigator.of(context)
-                    .pop(); // Close dialog without applying filter
-                fetchSongs(); // Re-fetch all songs
-              },
-              child: const Text('Clear Filter'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title with filter icon
+          // Title with Filter Icon beside it
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -191,10 +277,11 @@ class _MainListState extends State<MainList> {
                 ),
                 IconButton(
                   icon: const Icon(
-                    Icons.filter_list,
-                    color: Color(0xFFB4BA1C),
+                    Icons.filter_alt_outlined,
+                    color:
+                        Color(0xFFB4BA1C), // Custom color for the filter icon
                   ),
-                  onPressed: _showFilterDialog,
+                  onPressed: _showFilterOptions,
                 ),
               ],
             ),
@@ -225,24 +312,14 @@ class _MainListState extends State<MainList> {
 
           const SizedBox(height: 8.0),
 
-          // Song List (No filters)
+          // Song List (Filtered)
           Expanded(
             child: ListView.builder(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              itemCount: songs.length,
+              itemCount: filteredSongs.length,
               itemBuilder: (context, index) {
-                final song = songs[index];
-
-                // Apply filter logic here (example)
-                if ((selectedArtist != null &&
-                        selectedArtist != 'All Artists' &&
-                        song['artist'] != selectedArtist) ||
-                    (selectedType != null && song['type'] != selectedType) ||
-                    (selectedLanguage != null &&
-                        song['language'] != selectedLanguage)) {
-                  return Container(); // Skip this song if it doesn't match the filter
-                }
+                final song = filteredSongs[index];
 
                 return Card(
                   color: Colors.white,

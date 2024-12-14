@@ -147,9 +147,8 @@ class _DashboardTabState extends State<DashboardTab> {
                                 barRods: [
                                   BarChartRodData(
                                     toY: counts['SONGS']!.toDouble(),
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.blue, Colors.blue],
-                                    ),
+                                    color: const Color(
+                                        0xFFB4BA1C), // Updated color
                                     width: 20,
                                   ),
                                 ],
@@ -159,9 +158,8 @@ class _DashboardTabState extends State<DashboardTab> {
                                 barRods: [
                                   BarChartRodData(
                                     toY: counts['ARTISTS']!.toDouble(),
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.green, Colors.green],
-                                    ),
+                                    color: const Color(
+                                        0xFFB4BA1C), // Updated color
                                     width: 20,
                                   ),
                                 ],
@@ -171,9 +169,8 @@ class _DashboardTabState extends State<DashboardTab> {
                                 barRods: [
                                   BarChartRodData(
                                     toY: counts['DEVOTIONALS']!.toDouble(),
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.red, Colors.red],
-                                    ),
+                                    color: const Color(
+                                        0xFFB4BA1C), // Updated color
                                     width: 20,
                                   ),
                                 ],
