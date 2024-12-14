@@ -186,7 +186,7 @@ class _FavoritesState extends State<Favorites> {
                     contentPadding: const EdgeInsets.all(16.0),
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Container(
+                      child: SizedBox(
                         width: 100,
                         height: 100,
                         child: Image.network(

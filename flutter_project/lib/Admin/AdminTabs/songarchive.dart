@@ -31,7 +31,7 @@ class ArchiveTab extends StatelessWidget {
           alignment: Alignment.centerLeft, // Align text to the left
           child: Padding(
             padding: EdgeInsets.only(
-                left: 16.0, top: 32.0), // Add left and top padding
+                left: 16.0, top: 15.0), // Add left and top padding
             child: Text(
               'Archived List',
               style: TextStyle(

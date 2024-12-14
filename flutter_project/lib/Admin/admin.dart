@@ -48,38 +48,6 @@ class _AdminDashboardState extends State<Admin> {
           children: [
             const SizedBox(
                 width: 8), // Adds a small space between the icon and text
-            RichText(
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Sacred',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Roboto',
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Strings',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
-                      fontFamily: 'Roboto',
-                      color: Color(0xFF615E5E),
-                      fontSize: 24,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
         backgroundColor: const Color(0xFFB4BA1C),

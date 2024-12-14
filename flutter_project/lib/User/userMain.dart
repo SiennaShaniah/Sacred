@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/Admin/AdminTabs/devotion.dart';
 import 'package:flutter_project/User/UserTabs/favorites.dart';
 import 'package:flutter_project/User/UserTabs/mainList.dart';
 import 'package:flutter_project/User/UserTabs/myLineUp.dart';
@@ -42,46 +41,7 @@ class _AdminDashboardState extends State<User> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize
-              .min, // Ensures the Row doesn't take up the entire width
-          children: [
-            const SizedBox(
-                width: 8), // Adds a small space between the icon and text
-            RichText(
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Sacred',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Roboto',
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Strings',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontStyle: FontStyle.italic,
-                      fontFamily: 'Roboto',
-                      color: Color(0xFF615E5E),
-                      fontSize: 24,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        title: Container(), // Remove the title
         backgroundColor: const Color(0xFFB4BA1C),
       ),
       drawer: Drawer(
@@ -229,11 +189,11 @@ class _AdminDashboardState extends State<User> {
       case 2:
         return const MyLineUp();
       case 3:
-        return const Mysongs();
+        return Mysongs();
       case 4:
         return const tools();
       case 5:
-        return const userdailydevo();
+        return const UserDailyDevo();
       default:
         return const Center(child: Text('Select a tab'));
     }

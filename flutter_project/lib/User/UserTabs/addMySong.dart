@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AddSongTab extends StatefulWidget {
-  const AddSongTab({super.key});
+class AddMySongTab extends StatefulWidget {
+  const AddMySongTab({super.key});
 
   @override
-  State<AddSongTab> createState() => _AddSongTabState();
+  State<AddMySongTab> createState() => _AddSongTabState();
 }
 
-class _AddSongTabState extends State<AddSongTab> {
+class _AddSongTabState extends State<AddMySongTab> {
   final _firestore = FirebaseFirestore.instance;
 
   // Controllers for text fields
@@ -107,17 +107,23 @@ class _AddSongTabState extends State<AddSongTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Song'),
+        backgroundColor: const Color(0xFFB4BA1C), // Custom color for the AppBar
+        elevation: 4.0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the previous screen
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Add Song',
-                  style:
-                      TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-
               // Add Artist
               const Text('Add Artist',
                   style: TextStyle(fontWeight: FontWeight.bold)),
@@ -129,7 +135,14 @@ class _AddSongTabState extends State<AddSongTab> {
                       decoration: InputDecoration(
                         hintText: 'Enter Artist Name',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0)),
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFB4BA1C))),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: const BorderSide(
+                              color: Color(0xFFB4BA1C), width: 2.0),
+                        ),
                       ),
                     ),
                   ),
@@ -163,7 +176,13 @@ class _AddSongTabState extends State<AddSongTab> {
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0)),
+                      borderRadius: BorderRadius.circular(8.0),
+                      borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
+                  ),
                 ),
                 hint: const Text('Select an image'),
               ),
@@ -202,7 +221,6 @@ class _AddSongTabState extends State<AddSongTab> {
 
   Widget _buildTextField(String label, TextEditingController controller,
       {int maxLines = 1}) {
-    final focusNode = FocusNode();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -210,20 +228,18 @@ class _AddSongTabState extends State<AddSongTab> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          focusNode: focusNode,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: 'Enter $label',
-            filled: true,
-            fillColor: focusNode.hasFocus
-                ? const Color(0xFFB4BA1C)
-                : Colors.transparent,
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
+            ),
           ),
-          onTap: () {
-            setState(() {}); // Update UI on tap
-          },
         ),
         const SizedBox(height: 20),
       ],
@@ -244,8 +260,14 @@ class _AddSongTabState extends State<AddSongTab> {
               .toList(),
           onChanged: onChanged,
           decoration: InputDecoration(
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
+            ),
           ),
           hint: Text('Select $label'),
         ),

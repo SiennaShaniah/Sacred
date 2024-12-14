@@ -22,6 +22,23 @@ class _AddDailyDevotionalTabState extends State<AddDailyDevotionalTab> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFFB4BA1C), // Header background color
+              onPrimary: Colors.white, // Header text color
+              onSurface: Colors.black, // Body text color
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB4BA1C), // Button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedDate != null) {
       setState(() {
@@ -110,7 +127,14 @@ class _AddDailyDevotionalTabState extends State<AddDailyDevotionalTab> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color:
+                              const Color(0xFFB4BA1C), // Focused border color
+                        ),
+                      ),
                     ),
+                    cursorColor: const Color(0xFFB4BA1C), // Cursor color
                   ),
                 ),
               ),
@@ -124,7 +148,13 @@ class _AddDailyDevotionalTabState extends State<AddDailyDevotionalTab> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFFB4BA1C),
+                    ),
+                  ),
                 ),
+                cursorColor: const Color(0xFFB4BA1C),
               ),
               const SizedBox(height: 20),
               const Text('Bible Verse',
@@ -136,7 +166,13 @@ class _AddDailyDevotionalTabState extends State<AddDailyDevotionalTab> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFFB4BA1C),
+                    ),
+                  ),
                 ),
+                cursorColor: const Color(0xFFB4BA1C),
               ),
               const SizedBox(height: 20),
               const Text('Body', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -149,7 +185,13 @@ class _AddDailyDevotionalTabState extends State<AddDailyDevotionalTab> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFFB4BA1C),
+                    ),
+                  ),
                 ),
+                cursorColor: const Color(0xFFB4BA1C),
               ),
               const SizedBox(height: 40),
               Row(

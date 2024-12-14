@@ -11,7 +11,7 @@ class DailyDevotionalListTab extends StatelessWidget {
         const Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: EdgeInsets.only(left: 16.0, top: 32.0),
+            padding: EdgeInsets.only(left: 16.0, top: 15.0),
             child: Text(
               'Daily Devotionals',
               style: TextStyle(

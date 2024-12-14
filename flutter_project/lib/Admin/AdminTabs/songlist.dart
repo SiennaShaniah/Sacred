@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'editSong.dart';
 
 class SongListTab extends StatefulWidget {
   const SongListTab({super.key});
@@ -16,11 +17,13 @@ class _SongListTabState extends State<SongListTab> {
   String selectedLanguage = 'All Languages';
   String selectedType = 'All Types';
   String? selectedArtist;
+  List<String> artists = []; // List to store artists
 
   @override
   void initState() {
     super.initState();
-    _loadSongs(); // Load songs from Firestore
+    _loadSongs();
+    _loadArtists(); // Load artists from Firestore
   }
 
   Future<void> _loadSongs() async {
@@ -38,9 +41,11 @@ class _SongListTabState extends State<SongListTab> {
             "original_key": doc.data().containsKey('original_key')
                 ? doc['original_key']
                 : 'N/A',
-            "chords": doc['chords'] ?? 'N/A',
-            "lyrics": doc['lyrics'] ?? '',
-            "song_link": doc['song_link'] ?? '',
+            "chordsAndLyrics": doc.data().containsKey('chordsAndLyrics')
+                ? doc['chordsAndLyrics']
+                : '',
+            "song_link":
+                doc.data().containsKey('song_link') ? doc['song_link'] : '',
           };
         }).toList();
         filteredSongs = List.from(songs); // Initially display all songs
@@ -49,6 +54,20 @@ class _SongListTabState extends State<SongListTab> {
       print("Error loading songs: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error loading songs: $e")),
+      );
+    }
+  }
+
+  Future<void> _loadArtists() async {
+    try {
+      final snapshot = await _firestore.collection('artists').get();
+      setState(() {
+        artists = snapshot.docs.map((doc) => doc['name'] as String).toList();
+      });
+    } catch (e) {
+      print("Error loading artists: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error loading artists: $e")),
       );
     }
   }
@@ -88,148 +107,173 @@ class _SongListTabState extends State<SongListTab> {
     });
   }
 
-  Future<void> _deleteSong(String songId) async {
-    await _firestore.collection('songs').doc(songId).delete();
+  Future<void> _archiveSong(String songId) async {
+    await _firestore.collection('songs').doc(songId).update({
+      'archived': true, // Mark the song as archived
+    });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Song deleted successfully')),
+      const SnackBar(content: Text('Song archived successfully')),
     );
     _loadSongs(); // Reload songs
   }
 
-  Future<void> _updateSong(
-      String songId, Map<String, dynamic> updatedData) async {
-    await _firestore.collection('songs').doc(songId).update(updatedData);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Song updated successfully')),
+  void _navigateToEditSongScreen(Map<String, dynamic> songData) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditSong(songData: songData), // Passing songData
+      ),
     );
-    _loadSongs(); // Reload songs
   }
 
-  Future<void> _showSortOptions() async {
-    // Get all songs from Firestore
-    final snapshot = await _firestore.collection('songs').get();
-
-    // Extract artist names and remove duplicates using a Set
-    Set<String> artistsSet = {};
-    for (var doc in snapshot.docs) {
-      artistsSet.add(doc['artist'].toString());
-    }
-
-    // Convert the set to a list
-    List<String> artists = artistsSet.toList();
-
+  void _showSortOptions() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          title: Text("Sort Options"),
+          title: const Text('Sort By'),
           content: SingleChildScrollView(
-            child: Column(
+            child: ListBody(
               children: [
-                // All Songs Option
                 ListTile(
-                  title: Text('All Songs'),
+                  title: const Text('Language'),
                   onTap: () {
-                    setState(() {
-                      filteredSongs = List.from(songs); // Reset to all songs
-                    });
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
+                    _showLanguageSortDialog(); // Show language filter options
                   },
                 ),
-                Divider(),
-
-                // Artist Dropdown Option
+                Divider(), // Divider added
                 ListTile(
-                  title: Text('Artist'),
-                  subtitle: Text(selectedArtist ?? 'Select Artist'),
+                  title: const Text('Type'),
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("Select Artist"),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              children: artists.map((artist) {
-                                return ListTile(
-                                  title: Text(artist),
-                                  onTap: () {
-                                    _filterByArtist(artist);
-                                    Navigator.of(context).pop();
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                    Navigator.pop(context);
+                    _showTypeSortDialog(); // Show type filter options
                   },
                 ),
-                Divider(),
-
-                // Language Dropdown Option
+                Divider(), // Divider added
                 ListTile(
-                  title: Text('Language'),
-                  subtitle: Text(selectedLanguage),
+                  title: const Text('Artist'),
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("Select Language"),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              children:
-                                  ['English', 'Tagalog', 'Cebuano'].map((lang) {
-                                return ListTile(
-                                  title: Text(lang),
-                                  onTap: () {
-                                    _filterByLanguage(lang);
-                                    Navigator.of(context).pop();
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-                Divider(),
-
-                // Type Dropdown Option
-                ListTile(
-                  title: Text('Type'),
-                  subtitle: Text(selectedType),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("Select Type"),
-                          content: SingleChildScrollView(
-                            child: Column(
-                              children:
-                                  ['Praise and Worship', 'Hymnal'].map((type) {
-                                return ListTile(
-                                  title: Text(type),
-                                  onTap: () {
-                                    _filterByType(type);
-                                    Navigator.of(context).pop();
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                    Navigator.pop(context);
+                    _showArtistSortDialog(); // Show artist filter options
                   },
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSortDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Language'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Languages'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('All Languages');
+                },
+              ),
+              ListTile(
+                title: const Text('English'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('English');
+                },
+              ),
+              ListTile(
+                title: const Text('Tagalog'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('Tagalog');
+                },
+              ),
+              ListTile(
+                title: const Text('Cebuano'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByLanguage('Cebuano');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTypeSortDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Types'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('All Types');
+                },
+              ),
+              ListTile(
+                title: const Text('Praise And Worship'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('Praise And Worship');
+                },
+              ),
+              ListTile(
+                title: const Text('Hymnal'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByType('Hymnal');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showArtistSortDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Artist'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('All Artists'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _filterByArtist(null);
+                },
+              ),
+              // Dynamically generate artist filter options
+              ...artists.map((artist) {
+                return ListTile(
+                  title: Text(artist),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _filterByArtist(artist);
+                  },
+                );
+              }).toList(),
+            ],
           ),
         );
       },
@@ -243,7 +287,8 @@ class _SongListTabState extends State<SongListTab> {
       children: [
         // Title with Funnel Icon for Sorting
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0, vertical: 8.0), // Reduced vertical padding
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -266,8 +311,8 @@ class _SongListTabState extends State<SongListTab> {
         // Song List
         Expanded(
           child: ListView.builder(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 8.0), // Reduced vertical padding
             itemCount: filteredSongs.length,
             itemBuilder: (context, index) {
               final song = filteredSongs[index];
@@ -304,9 +349,9 @@ class _SongListTabState extends State<SongListTab> {
                   trailing: PopupMenuButton<String>(
                     onSelected: (String value) {
                       if (value == 'edit') {
-                        _showEditForm(context, song);
-                      } else if (value == 'delete') {
-                        _deleteSong(song["id"]);
+                        _navigateToEditSongScreen(song);
+                      } else if (value == 'archive') {
+                        _archiveSong(song["id"]);
                       }
                     },
                     itemBuilder: (BuildContext context) {
@@ -322,12 +367,12 @@ class _SongListTabState extends State<SongListTab> {
                           ),
                         ),
                         const PopupMenuItem<String>(
-                          value: 'delete',
+                          value: 'archive',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, color: Color(0xFFB4BA1C)),
+                              Icon(Icons.archive, color: Color(0xFFB4BA1C)),
                               SizedBox(width: 8),
-                              Text('Delete'),
+                              Text('Archive'),
                             ],
                           ),
                         ),
@@ -340,90 +385,6 @@ class _SongListTabState extends State<SongListTab> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showEditForm(BuildContext context, Map<String, dynamic> song) {
-    TextEditingController titleController =
-        TextEditingController(text: song['title']);
-    TextEditingController artistController =
-        TextEditingController(text: song['artist']);
-    TextEditingController languageController =
-        TextEditingController(text: song['language']);
-    TextEditingController typeController =
-        TextEditingController(text: song['type']);
-    TextEditingController imageUrlController =
-        TextEditingController(text: song['image']);
-    TextEditingController originalKeyController =
-        TextEditingController(text: song['original_key']);
-    TextEditingController chordsController =
-        TextEditingController(text: song['chords']);
-    TextEditingController lyricsController =
-        TextEditingController(text: song['lyrics']);
-    TextEditingController songLinkController =
-        TextEditingController(text: song['song_link']);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Song'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildTextField('Title', titleController),
-                _buildTextField('Artist', artistController),
-                _buildTextField('Language', languageController),
-                _buildTextField('Type', typeController),
-                _buildTextField('Image URL', imageUrlController),
-                _buildTextField('Original Key', originalKeyController),
-                _buildTextField('Chords', chordsController),
-                _buildTextField('Lyrics', lyricsController),
-                _buildTextField('Song Link', songLinkController),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Prepare the updated song data
-                Map<String, dynamic> updatedSong = {
-                  'title': titleController.text,
-                  'artist': artistController.text,
-                  'language': languageController.text,
-                  'type': typeController.text,
-                  'image': imageUrlController.text,
-                  'original_key': originalKeyController.text,
-                  'chords': chordsController.text,
-                  'lyrics': lyricsController.text,
-                  'song_link': songLinkController.text,
-                };
-
-                // Update the song in Firestore
-                _updateSong(song['id'], updatedSong);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save Changes'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(labelText: label),
-      ),
     );
   }
 }

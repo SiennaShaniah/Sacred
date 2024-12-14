@@ -75,7 +75,7 @@ flutter:
       - lib/Images/bible.jpg
       - lib/Images/bible3.jpg
       - lib/Images/bible2.jpg
-
+      - lib/Images/imagesDropdown/bible4.jpg
       - lib/Images/imagesDropdown/ElevationWorship.jpg
       - lib/Images/imagesDropdown/CastingCrowns.jpg
       - lib/Images/imagesDropdown/MjFlores.jpg
@@ -93,7 +93,7 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  #fonts:
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
@@ -104,6 +104,8 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
+
+
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
