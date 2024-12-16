@@ -1,113 +1,168 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Import the intl package for date formatting
 
 class UserDailyDevo extends StatelessWidget {
   const UserDailyDevo({super.key});
 
+  // Method to fetch the most recent devotional from Firestore
+  Future<DocumentSnapshot<Object?>> fetchMostRecentDevotional() async {
+    // Fetch the most recent document from the Firestore collection
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('devotionals')
+        .orderBy('timestamp', descending: true) // Sort by 'timestamp'
+        .limit(1)
+        .get();
+
+    // Check if there are any documents, if so return the first document
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first; // Return the first document if available
+    } else {
+      // Return null if no documents found
+      throw Exception('No devotional found.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stack to position the date and title over the image
-            Stack(
+      body: FutureBuilder<DocumentSnapshot<Object?>>(
+        future: fetchMostRecentDevotional(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData ||
+              snapshot.data == null ||
+              !snapshot.data!.exists) {
+            return Center(child: Text('No devotional available.'));
+          }
+
+          // Get the devotional data from Firestore
+          var devotionalData = snapshot.data!;
+          String title = devotionalData['title'] ?? 'No title';
+
+          // Fetch the date directly from the 'date' field (not the timestamp)
+          String rawDate = devotionalData['date'] ??
+              'No date'; // Assuming 'date' is a string or formatted date
+
+          // Format the date using DateFormat
+          DateTime dateTime = DateTime.tryParse(rawDate) ?? DateTime.now();
+          String date = DateFormat('MMMM dd, yyyy').format(dateTime);
+
+          String bibleVerse = devotionalData['bible_verse'] ?? 'No Bible verse';
+          String body = devotionalData['body'] ?? 'No body text';
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image Section
-                Image.asset(
-                  'lib/Images/bible2.jpg', // Replace with your image path
-                  width: double.infinity,
-                  height: 500.0, // Increased height for a longer image
-                  fit: BoxFit.cover,
+                // Stack to position the date and title over the image
+                Stack(
+                  children: [
+                    // Image Section
+                    Image.asset(
+                      'lib/Images/bible2.jpg', // Replace with your image path
+                      width: double.infinity,
+                      height: 500.0, // Increased height for a longer image
+                      fit: BoxFit.cover,
+                    ),
+                    // Positioned Title and Date at the top left corner
+                    Positioned(
+                      top: 16.0,
+                      left: 16.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white
+                              .withOpacity(0.5), // 50% opacity white color
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title, // Dynamic Devotional Title
+                              style: TextStyle(
+                                fontSize: 16.0, // Smaller font size
+                                fontWeight: FontWeight.bold,
+                                overflow:
+                                    TextOverflow.ellipsis, // Handles overflow
+                              ),
+                              maxLines: 2, // Limit to 2 lines if necessary
+                            ),
+                            SizedBox(height: 8.0),
+                            Text(
+                              date, // Dynamic Date fetched and formatted
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.normal,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                // Positioned Title and Date at the top left corner
-                Positioned(
-                  top: 16.0,
-                  left: 16.0,
+                SizedBox(height: 16.0),
+
+                // Bible Verse Section inside a box with 50% opacity
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Container(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
-                      color: Colors.white
-                          .withOpacity(0.5), // 50% opacity white color
+                      color: Color(0xFFB4BA1C)
+                          .withOpacity(0.5), // 50% opacity color
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Devotional Title Here', // Devotional Title
-                          style: TextStyle(
-                            fontSize: 24.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8.0),
-                        Text(
-                          'December 13, 2024', // Date
-                          style: TextStyle(
-                            fontSize: 14.0, // Smaller font size
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.normal, // Remove italics
-                            color: Colors.black, // Set color to black
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      bibleVerse,
+                      textAlign: TextAlign.justify, // Justify the text
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      ),
                     ),
                   ),
                 ),
+                SizedBox(height: 16.0),
+
+                // Body Section inside a box with 50% opacity
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFB4BA1C)
+                          .withOpacity(0.5), // 50% opacity color
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Text(
+                      body,
+                      textAlign: TextAlign.justify, // Justify the text
+                      style: TextStyle(
+                        fontSize: 13.0,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.0),
               ],
             ),
-            const SizedBox(height: 16.0),
-
-            // Bible Verse Section inside a box with 50% opacity
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB4BA1C)
-                      .withOpacity(0.5), // 50% opacity color
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  'Jeremiah 29:11 - "For I know the plans I have for you," declares the Lord, "plans to prosper you and not to harm you, plans to give you a hope and a future."',
-                  textAlign: TextAlign.justify, // Justify the text
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    color: Color.fromARGB(
-                        255, 0, 0, 0), // Text color to ensure readability
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Body Section inside a box with 50% opacity
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB4BA1C)
-                      .withOpacity(0.5), // 50% opacity color
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  'Here is the body of the devotional. It contains a meaningful message to reflect on the teachings of the Bible and apply it to your daily life. This text can be dynamic or static depending on the use case.',
-                  textAlign: TextAlign.justify, // Justify the text
-                  style: TextStyle(
-                    fontSize: 13.0,
-                    color: Color.fromARGB(
-                        255, 0, 0, 0), // Text color to ensure readability
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20.0),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

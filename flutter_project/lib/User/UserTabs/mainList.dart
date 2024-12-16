@@ -16,14 +16,12 @@ class _MainListState extends State<MainList> {
   String? selectedArtist;
   List<String> artists = []; // List to store artists
 
-  // Initialize the list of songs
   @override
   void initState() {
     super.initState();
     fetchSongs();
   }
 
-  // Fetch songs data from Firestore
   Future<void> fetchSongs() async {
     try {
       final querySnapshot =
@@ -42,10 +40,7 @@ class _MainListState extends State<MainList> {
           };
         }).toList();
 
-        // Initialize filteredSongs to be the same as the original songs list
         filteredSongs = List.from(songs);
-
-        // Get a list of artists for filtering
         artists =
             songs.map((song) => song['artist'] as String).toSet().toList();
       });
@@ -54,7 +49,6 @@ class _MainListState extends State<MainList> {
     }
   }
 
-  // Filter songs by language
   void _filterByLanguage(String language) {
     setState(() {
       selectedLanguage = language;
@@ -64,7 +58,6 @@ class _MainListState extends State<MainList> {
     });
   }
 
-  // Filter songs by type
   void _filterByType(String type) {
     setState(() {
       selectedType = type;
@@ -74,7 +67,6 @@ class _MainListState extends State<MainList> {
     });
   }
 
-  // Filter songs by artist
   void _filterByArtist(String? artist) {
     setState(() {
       selectedArtist = artist;
@@ -84,7 +76,6 @@ class _MainListState extends State<MainList> {
     });
   }
 
-  // Show filter options
   void _showFilterOptions() {
     showDialog(
       context: context,
@@ -101,7 +92,7 @@ class _MainListState extends State<MainList> {
                     _showLanguageFilterDialog();
                   },
                 ),
-                Divider(color: Color(0xFFB4BA1C)), // Divider color changed
+                Divider(color: Color(0xFFB4BA1C)),
                 ListTile(
                   title: const Text('Type'),
                   onTap: () {
@@ -109,7 +100,7 @@ class _MainListState extends State<MainList> {
                     _showTypeFilterDialog();
                   },
                 ),
-                Divider(color: Color(0xFFB4BA1C)), // Divider color changed
+                Divider(color: Color(0xFFB4BA1C)),
                 ListTile(
                   title: const Text('Artist'),
                   onTap: () {
@@ -125,7 +116,6 @@ class _MainListState extends State<MainList> {
     );
   }
 
-  // Language selection dialog
   void _showLanguageFilterDialog() {
     showDialog(
       context: context,
@@ -170,7 +160,6 @@ class _MainListState extends State<MainList> {
     );
   }
 
-  // Type selection dialog
   void _showTypeFilterDialog() {
     showDialog(
       context: context,
@@ -208,7 +197,6 @@ class _MainListState extends State<MainList> {
     );
   }
 
-  // Artist selection dialog
   void _showArtistFilterDialog() {
     showDialog(
       context: context,
@@ -241,14 +229,13 @@ class _MainListState extends State<MainList> {
     );
   }
 
-  // Toggle favorite state and update Firestore
   Future<void> toggleFavorite(String songId, bool currentFavoriteStatus) async {
     try {
       await FirebaseFirestore.instance.collection('songs').doc(songId).update({
         'isFavorite': !currentFavoriteStatus,
       });
 
-      fetchSongs(); // Refresh after update
+      fetchSongs();
     } catch (e) {
       print("Error updating favorite: $e");
     }
@@ -260,7 +247,6 @@ class _MainListState extends State<MainList> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title with Filter Icon beside it
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -278,21 +264,26 @@ class _MainListState extends State<MainList> {
                 IconButton(
                   icon: const Icon(
                     Icons.filter_alt_outlined,
-                    color:
-                        Color(0xFFB4BA1C), // Custom color for the filter icon
+                    color: Color(0xFFB4BA1C),
                   ),
                   onPressed: _showFilterOptions,
                 ),
               ],
             ),
           ),
-
-          // Search Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(
               onChanged: (query) {
-                fetchSongs(); // Fetch songs again when search query changes
+                setState(() {
+                  final searchQuery = query.toLowerCase();
+                  filteredSongs = songs.where((song) {
+                    final title = song['title']?.toLowerCase() ?? '';
+                    final artist = song['artist']?.toLowerCase() ?? '';
+                    return title.contains(searchQuery) ||
+                        artist.contains(searchQuery);
+                  }).toList();
+                });
               },
               decoration: InputDecoration(
                 hintText: 'Search songs...',
@@ -309,10 +300,7 @@ class _MainListState extends State<MainList> {
               ),
             ),
           ),
-
           const SizedBox(height: 8.0),
-
-          // Song List (Filtered)
           Expanded(
             child: ListView.builder(
               padding:

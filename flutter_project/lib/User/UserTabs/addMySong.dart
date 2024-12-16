@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddMySongTab extends StatefulWidget {
   const AddMySongTab({super.key});
@@ -10,6 +11,7 @@ class AddMySongTab extends StatefulWidget {
 
 class _AddSongTabState extends State<AddMySongTab> {
   final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
 
   // Controllers for text fields
   final _artistController = TextEditingController();
@@ -18,18 +20,9 @@ class _AddSongTabState extends State<AddMySongTab> {
   final _linkController = TextEditingController();
 
   // State variables
-  String? selectedArtist;
   String? selectedKey;
   String? selectedSongType;
   String? selectedLanguage;
-  String? selectedImagePath;
-
-  // Image options from the assets folder
-  final List<String> imagePaths = [
-    'lib/Images/imagesDropdown/ElevationWorship.jpg',
-    'lib/Images/imagesDropdown/CastingCrowns.jpg',
-    'lib/Images/imagesDropdown/MjFlores.jpg'
-  ];
 
   // Dropdown options
   List<String> artists = [];
@@ -64,23 +57,29 @@ class _AddSongTabState extends State<AddMySongTab> {
   }
 
   Future<void> _saveSong() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')));
+      return;
+    }
+
     if (_songTitleController.text.isNotEmpty &&
-        selectedArtist != null &&
+        _artistController.text.isNotEmpty &&
         selectedKey != null &&
         _chordsAndLyricsController.text.isNotEmpty &&
         selectedSongType != null &&
         selectedLanguage != null) {
-      await _firestore.collection('songs').add({
-        'title': _songTitleController.text,
-        'artist': selectedArtist,
-        'key': selectedKey,
-        'chordsAndLyrics': _chordsAndLyricsController.text,
-        'type': selectedSongType,
-        'language': selectedLanguage,
-        'link': _linkController.text,
-        'imagePath': selectedImagePath, // Save selected image path
+      await _firestore.collection('userAddSong').add({
+        'userId': user.uid, // Store userId from Firebase Authentication
+        'songTitle': _songTitleController.text,
+        'songArtist': _artistController.text,
+        'songOriginalKey': selectedKey,
+        'songChordsAndLyrics': _chordsAndLyricsController.text,
+        'songType': selectedSongType,
+        'songLanguage': selectedLanguage,
+        'songLink': _linkController.text,
         'timestamp': FieldValue.serverTimestamp(), // Add timestamp field
-        'isFavorite': false, // Default value for the new field
       });
 
       _clearFields();
@@ -96,11 +95,10 @@ class _AddSongTabState extends State<AddMySongTab> {
     _songTitleController.clear();
     _chordsAndLyricsController.clear();
     _linkController.clear();
-    selectedArtist = null;
+    _artistController.clear();
     selectedKey = null;
     selectedSongType = null;
     selectedLanguage = null;
-    selectedImagePath = null;
     setState(() {});
   }
 
@@ -124,78 +122,25 @@ class _AddSongTabState extends State<AddMySongTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Add Artist
-              const Text('Add Artist',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _artistController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter Artist Name',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFB4BA1C))),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: const BorderSide(
-                              color: Color(0xFFB4BA1C), width: 2.0),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _addArtist,
-                    style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        backgroundColor: const Color(0xFFB4BA1C)),
-                    child: const Icon(Icons.check, color: Colors.black),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Add Image - Dropdown
-              const Text('Select Image',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              DropdownButtonFormField<String>(
-                value: selectedImagePath,
-                items: imagePaths
-                    .map((path) => DropdownMenuItem(
-                          value: path,
-                          child: Text(path.split('/').last),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedImagePath = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
-                  ),
-                ),
-                hint: const Text('Select an image'),
-              ),
-              const SizedBox(height: 20),
-
               // Other Input Fields
               _buildTextField('Song Title', _songTitleController),
-              _buildDropdown('Song Artist', artists, selectedArtist,
-                  (value) => setState(() => selectedArtist = value)),
+              _buildTextField('Song Artist', _artistController),
               _buildDropdown('Original Key', keys, selectedKey,
                   (value) => setState(() => selectedKey = value)),
+
+              // Instruction before the Chords and Lyrics text field
+              const SizedBox(height: 8),
+              Text(
+                'Each line with chords should start with the ">" symbol.',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+              // Chords and Lyrics TextField
               _buildTextField('Chords and Lyrics', _chordsAndLyricsController,
                   maxLines: 6),
+
               _buildDropdown('Song Type', songTypes, selectedSongType,
                   (value) => setState(() => selectedSongType = value)),
               _buildDropdown('Song Language', languages, selectedLanguage,
@@ -285,17 +230,5 @@ class _AddSongTabState extends State<AddMySongTab> {
           backgroundColor: const Color(0xFFB4BA1C),
           minimumSize: const Size(100, 40)),
     );
-  }
-
-  Future<void> _addArtist() async {
-    if (_artistController.text.isNotEmpty) {
-      await _firestore
-          .collection('artists')
-          .add({'name': _artistController.text});
-      _artistController.clear();
-      _loadArtists(); // Refresh the artist list
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Artist added successfully')));
-    }
   }
 }

@@ -5,25 +5,9 @@ import 'package:flutter_project/User/UserTabs/myLineUp.dart';
 import 'package:flutter_project/User/UserTabs/mySongs.dart';
 import 'package:flutter_project/User/UserTabs/tools.dart';
 import 'package:flutter_project/User/UserTabs/userDailyDevo.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SacredStrings',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const User(),
-    );
-  }
-}
+import 'package:flutter_project/Services/auth.service.dart'; // Import the AuthService
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore import
 
 class User extends StatefulWidget {
   const User({super.key});
@@ -35,6 +19,37 @@ class User extends StatefulWidget {
 class _AdminDashboardState extends State<User> {
   int _selectedIndex = 0; // Track the selected index for content
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final AuthService _authService = AuthService(); // Initialize AuthService
+  String username = ''; // Store the username
+  String email = ''; // Store the email
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserInfo(); // Get user info on startup
+  }
+
+  // Method to get the user information
+  Future<void> _getUserInfo() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        email = user.email ?? '';
+      });
+
+      // Fetch the user data from Firestore (if you have it there)
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (userData.exists) {
+        setState(() {
+          username = userData['username'] ??
+              'User'; // Assuming username is stored in Firestore
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +67,16 @@ class _AdminDashboardState extends State<User> {
                 color: Colors.white,
               ),
             ),
-            const Spacer(), // This will push the profile picture to the right
+            const Spacer(),
             CircleAvatar(
               radius: 20,
-              backgroundImage: AssetImage(
-                  'lib/Images/adminprofile.jpg'), // Replace with your image path
+              backgroundImage: AssetImage('lib/Images/logo.png'),
             ),
           ],
         ),
       ),
       drawer: Container(
-        width: 325, // Set the desired width of the sidebar here
+        width: 325,
         child: Drawer(
           backgroundColor: Colors.white,
           child: ListView(
@@ -112,26 +126,30 @@ class _AdminDashboardState extends State<User> {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundImage: AssetImage(
-                              'lib/Images/adminprofile.jpg'), // Profile image path
+                          backgroundImage:
+                              AssetImage('lib/Images/logo.png.jpg'),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
-                                'Shienna Laredo',
-                                style: TextStyle(
+                                username.isEmpty
+                                    ? 'Loading...'
+                                    : username, // Display username
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               Text(
-                                'shiennalaredo1617@gmail.com',
-                                style: TextStyle(
+                                email.isEmpty
+                                    ? 'Loading...'
+                                    : email, // Display email
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 14,
                                 ),
@@ -203,12 +221,12 @@ class _AdminDashboardState extends State<User> {
     return ListTile(
       leading: Icon(
         icon,
-        color: const Color(0xFFB4BA1C), // Updated icon color
+        color: const Color(0xFFB4BA1C),
       ),
       title: Text(
         title,
         style: const TextStyle(
-          color: Colors.black, // Updated text color
+          color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -216,6 +234,7 @@ class _AdminDashboardState extends State<User> {
         Navigator.pop(context); // Close the drawer
         if (index == -1) {
           // Handle Log Out logic
+          _authService.signout(context: context); // Call the signout method
         } else {
           setState(() {
             _selectedIndex = index;

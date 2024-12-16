@@ -1,29 +1,11 @@
-import 'package:flutter/material.dart';
-
+import 'package:flutter/material.dart'; // Import your WelcomeScreen
+import '../Pages/welcomescreen.dart';
+import '../Services/auth.service.dart';
 import 'AdminTabs/addashboard.dart';
 import 'AdminTabs/addsong.dart';
 import 'AdminTabs/devotion.dart';
 import 'AdminTabs/listdevotion.dart';
 import 'AdminTabs/songlist.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SacredStrings',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const Admin(),
-    );
-  }
-}
 
 class Admin extends StatefulWidget {
   const Admin({super.key});
@@ -83,7 +65,7 @@ class _AdminDashboardState extends State<Admin> {
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Roboto',
                             color: Colors.white,
-                            fontSize: 30, // Adjusted font size
+                            fontSize: 30,
                           ),
                         ),
                         TextSpan(
@@ -93,14 +75,14 @@ class _AdminDashboardState extends State<Admin> {
                             fontStyle: FontStyle.italic,
                             fontFamily: 'Roboto',
                             color: Color(0xFFB4BA1C),
-                            fontSize: 30, // Adjusted font size
+                            fontSize: 30,
                           ),
                         ),
                         TextSpan(
                           text: '.',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 24, // Adjusted font size
+                            fontSize: 24,
                           ),
                         ),
                       ],
@@ -110,9 +92,9 @@ class _AdminDashboardState extends State<Admin> {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 25, // Adjusted size
-                        backgroundImage: AssetImage(
-                            'lib/Images/adminprofile.jpg'), // Replace with your image path
+                        radius: 25,
+                        backgroundImage:
+                            AssetImage('lib/Images/adminprofile.jpg'),
                       ),
                       const SizedBox(width: 10),
                       Column(
@@ -122,7 +104,7 @@ class _AdminDashboardState extends State<Admin> {
                             'Shienna Laredo',
                             style: TextStyle(
                               color: Colors.black,
-                              fontSize: 14, // Adjusted font size
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -130,7 +112,7 @@ class _AdminDashboardState extends State<Admin> {
                             'shiennalaredo1617@gmail.com',
                             style: TextStyle(
                               color: Colors.black54,
-                              fontSize: 12, // Adjusted font size
+                              fontSize: 12,
                             ),
                           ),
                         ],
@@ -174,7 +156,7 @@ class _AdminDashboardState extends State<Admin> {
               context,
               icon: Icons.exit_to_app,
               title: 'Log Out',
-              index: -1,
+              index: -1, // Special index for logout
             ),
           ],
         ),
@@ -194,25 +176,38 @@ class _AdminDashboardState extends State<Admin> {
     return ListTile(
       leading: Icon(
         icon,
-        color: const Color(0xFFB4BA1C), // Updated icon color
+        color: const Color(0xFFB4BA1C),
       ),
       title: Text(
         title,
         style: const TextStyle(
-          color: Colors.black, // Updated text color
+          color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
       ),
       onTap: () {
         Navigator.pop(context); // Close the drawer
         if (index == -1) {
-          // Handle Log Out logic
+          // Log out logic
+          _handleLogout(context);
         } else {
           setState(() {
             _selectedIndex = index;
           });
         }
       },
+    );
+  }
+
+  // Handle logout
+  void _handleLogout(BuildContext context) async {
+    await AuthService().signout(context: context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) =>
+            const WelcomeScreen(), // Navigate to WelcomeScreen
+      ),
     );
   }
 

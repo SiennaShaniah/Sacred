@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/Services/auth.service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'register.dart'; // Importing the registration screen
+import '../Admin/admin.dart';
+import '../User/userMain.dart';
+import 'register.dart';
 
-// The loginScreen widget that represents the login page
 class loginScreen extends StatefulWidget {
   const loginScreen({super.key});
 
@@ -11,33 +12,29 @@ class loginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-// State class for the loginScreen, manages the UI and user input
 class _LoginScreenState extends State<loginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _passwordVisible = false; // Flag to toggle password visibility
+  bool _passwordVisible = false;
   final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Ensures resizing when the keyboard is visible
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Background image and welcome text
+          // Background image
           Container(
             height: double.infinity,
             width: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                    'lib/Images/loginReg.png'), // Replace with your image path
-                fit: BoxFit.cover, // Ensures the image covers the entire area
+                image: AssetImage('lib/Images/loginReg.png'),
+                fit: BoxFit.cover,
               ),
             ),
           ),
-
           // Login form container
           Padding(
             padding: const EdgeInsets.only(top: 200.0),
@@ -47,7 +44,7 @@ class _LoginScreenState extends State<loginScreen> {
                   topLeft: Radius.circular(40),
                   topRight: Radius.circular(40),
                 ),
-                color: Colors.white, // White background for the login form area
+                color: Colors.white,
               ),
               height: double.infinity,
               width: double.infinity,
@@ -66,7 +63,6 @@ class _LoginScreenState extends State<loginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     // Email input field
                     TextField(
                       controller: _emailController,
@@ -88,7 +84,6 @@ class _LoginScreenState extends State<loginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     // Password input field with visibility toggle
                     TextField(
                       controller: _passwordController,
@@ -123,7 +118,6 @@ class _LoginScreenState extends State<loginScreen> {
                       ),
                     ),
                     const SizedBox(height: 50),
-
                     // Sign-in button
                     GestureDetector(
                       onTap: () => _handleSignIn(context),
@@ -147,7 +141,6 @@ class _LoginScreenState extends State<loginScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
                     // Register text
                     Align(
                       alignment: Alignment.bottomRight,
@@ -203,18 +196,46 @@ class _LoginScreenState extends State<loginScreen> {
         msg: 'Please enter both email and password.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.SNACKBAR,
-        backgroundColor: Colors.black54,
-        textColor: Colors.white,
+        backgroundColor: const Color(
+            0xFFB4BA1C), // Set background color to Color(0xFFB4BA1C)
+        textColor: Colors.white, // White text color
         fontSize: 14.0,
       );
       return;
     }
 
-    await _authService.signin(
+    bool success = await _authService.signin(
       email: email,
       password: password,
       context: context,
     );
+
+    if (success) {
+      // Check if the email matches the admin account
+      if (email == 'shiennalaredo1617@gmail.com') {
+        // Navigate to the Admin page if the email matches
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Admin()),
+        );
+      } else {
+        // Navigate to the User page if the email does not match the admin email
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => User()),
+        );
+      }
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Please enter both email and password.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.SNACKBAR,
+        backgroundColor: const Color(
+            0xFFB4BA1C), // Set background color to Color(0xFFB4BA1C)
+        textColor: Colors.white, // White text color
+        fontSize: 14.0,
+      );
+    }
   }
 
   @override
