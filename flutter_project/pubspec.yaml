@@ -42,7 +42,7 @@ dependencies:
   fluttertoast: ^8.2.8
   file_picker: ^8.1.4
   fl_chart: ^0.69.2
-  intl: ^0.18.1 
+  intl: ^0.20.1 
 
 
 dev_dependencies:
@@ -73,6 +73,7 @@ flutter:
       - lib/Images/welcome.png
       - lib/Images/loginReg.png
       - lib/Images/logo.png
+      - lib/Images/logo2.png
       - lib/Images/bible.jpg
       - lib/Images/bible3.jpg
       - lib/Images/bible2.jpg

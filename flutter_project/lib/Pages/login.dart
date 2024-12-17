@@ -222,7 +222,7 @@ class _LoginScreenState extends State<loginScreen> {
         // Navigate to the User page if the email does not match the admin email
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => User()),
+          MaterialPageRoute(builder: (context) => UserDashboard()),
         );
       }
     } else {

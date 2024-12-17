@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login.dart';
 
 class RegScreen extends StatefulWidget {
@@ -44,8 +45,18 @@ class _RegScreenState extends State<RegScreen> {
 
     try {
       // Firebase user registration
-      await FirebaseAuth.instance
+      UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
+
+      // Save username to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid) // Use the Firebase user UID
+          .set({
+        'username': username,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
       _showToast('Registration successful!');
       Navigator.pushReplacement(

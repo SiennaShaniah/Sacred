@@ -6,17 +6,17 @@ import 'package:flutter_project/User/UserTabs/mySongs.dart';
 import 'package:flutter_project/User/UserTabs/tools.dart';
 import 'package:flutter_project/User/UserTabs/userDailyDevo.dart';
 import 'package:flutter_project/Services/auth.service.dart'; // Import the AuthService
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore import
 
-class User extends StatefulWidget {
-  const User({super.key});
+class UserDashboard extends StatefulWidget {
+  const UserDashboard({super.key});
 
   @override
-  _AdminDashboardState createState() => _AdminDashboardState();
+  _UserDashboardState createState() => _UserDashboardState();
 }
 
-class _AdminDashboardState extends State<User> {
+class _UserDashboardState extends State<UserDashboard> {
   int _selectedIndex = 0; // Track the selected index for content
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final AuthService _authService = AuthService(); // Initialize AuthService
@@ -29,25 +29,32 @@ class _AdminDashboardState extends State<User> {
     _getUserInfo(); // Get user info on startup
   }
 
-  // Method to get the user information
+  // Fetch the user information from Firestore
   Future<void> _getUserInfo() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      setState(() {
-        email = user.email ?? '';
-      });
-
-      // Fetch the user data from Firestore (if you have it there)
-      DocumentSnapshot userData = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (userData.exists) {
+    try {
+      firebase_auth.User? user =
+          firebase_auth.FirebaseAuth.instance.currentUser;
+      if (user != null) {
         setState(() {
-          username = userData['username'] ??
-              'User'; // Assuming username is stored in Firestore
+          email = user.email ?? ''; // Set email from FirebaseAuth
         });
+
+        // Fetch the user document from Firestore
+        DocumentSnapshot userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userData.exists) {
+          setState(() {
+            username = userData['username'] ?? 'User';
+          });
+        } else {
+          print('User data not found');
+        }
       }
+    } catch (e) {
+      print('Error fetching user data: $e');
     }
   }
 
@@ -68,9 +75,9 @@ class _AdminDashboardState extends State<User> {
               ),
             ),
             const Spacer(),
-            CircleAvatar(
+            const CircleAvatar(
               radius: 20,
-              backgroundImage: AssetImage('lib/Images/logo.png'),
+              backgroundImage: AssetImage('lib/Images/logo2.png'),
             ),
           ],
         ),
@@ -124,10 +131,9 @@ class _AdminDashboardState extends State<User> {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        CircleAvatar(
+                        const CircleAvatar(
                           radius: 30,
-                          backgroundImage:
-                              AssetImage('lib/Images/logo.png.jpg'),
+                          backgroundImage: AssetImage('lib/Images/logo2.png'),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -135,9 +141,7 @@ class _AdminDashboardState extends State<User> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                username.isEmpty
-                                    ? 'Loading...'
-                                    : username, // Display username
+                                username.isEmpty ? 'Loading...' : username,
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 18,
@@ -146,11 +150,9 @@ class _AdminDashboardState extends State<User> {
                               ),
                               const SizedBox(height: 5),
                               Text(
-                                email.isEmpty
-                                    ? 'Loading...'
-                                    : email, // Display email
+                                email.isEmpty ? 'Loading...' : email,
                                 style: const TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.black54,
                                   fontSize: 14,
                                 ),
                               ),
@@ -170,7 +172,7 @@ class _AdminDashboardState extends State<User> {
               ),
               _buildDrawerItem(
                 context,
-                icon: Icons.add,
+                icon: Icons.favorite,
                 title: 'Favorites',
                 index: 1,
               ),
@@ -188,13 +190,13 @@ class _AdminDashboardState extends State<User> {
               ),
               _buildDrawerItem(
                 context,
-                icon: Icons.book,
+                icon: Icons.build,
                 title: 'Tools',
                 index: 4,
               ),
               _buildDrawerItem(
                 context,
-                icon: Icons.list,
+                icon: Icons.book,
                 title: 'Daily Devotional',
                 index: 5,
               ),
@@ -219,10 +221,7 @@ class _AdminDashboardState extends State<User> {
     required int index,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: const Color(0xFFB4BA1C),
-      ),
+      leading: Icon(icon, color: const Color(0xFFB4BA1C)),
       title: Text(
         title,
         style: const TextStyle(
@@ -231,14 +230,11 @@ class _AdminDashboardState extends State<User> {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // Close the drawer
+        Navigator.pop(context);
         if (index == -1) {
-          // Handle Log Out logic
-          _authService.signout(context: context); // Call the signout method
+          _authService.signout(context: context);
         } else {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         }
       },
     );
