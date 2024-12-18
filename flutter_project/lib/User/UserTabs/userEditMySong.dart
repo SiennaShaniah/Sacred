@@ -1,33 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-import '../userMain.dart';
+import '../userMain.dart'; // Import the UserDashboard page
 
-class AddMySongTab extends StatefulWidget {
-  const AddMySongTab({super.key});
+class UserMySongEdit extends StatefulWidget {
+  final Map<String, dynamic> songData;
+
+  const UserMySongEdit({super.key, required this.songData});
 
   @override
-  State<AddMySongTab> createState() => _AddSongTabState();
+  State<UserMySongEdit> createState() => _UserMySongEditState();
 }
 
-class _AddSongTabState extends State<AddMySongTab> {
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
-
-  // Controllers for text fields
-  final _artistController = TextEditingController();
+class _UserMySongEditState extends State<UserMySongEdit> {
   final _songTitleController = TextEditingController();
   final _chordsAndLyricsController = TextEditingController();
   final _linkController = TextEditingController();
+  final _artistController = TextEditingController();
 
-  // State variables
   String? selectedKey;
   String? selectedSongType;
   String? selectedLanguage;
 
-  // Dropdown options
-  List<String> artists = [];
   final List<String> keys = [
     'C',
     'C#',
@@ -48,80 +42,64 @@ class _AddSongTabState extends State<AddMySongTab> {
   @override
   void initState() {
     super.initState();
-    _loadArtists(); // Load artists from Firestore
+    _loadSongData();
   }
 
-  Future<void> _loadArtists() async {
-    final snapshot = await _firestore.collection('artists').get();
-    setState(() {
-      artists = snapshot.docs.map((doc) => doc['name'] as String).toList();
-    });
+  void _loadSongData() {
+    _songTitleController.text = widget.songData['songTitle'] ?? '';
+    _chordsAndLyricsController.text =
+        widget.songData['songChordsAndLyrics'] ?? '';
+    _linkController.text = widget.songData['songLink'] ?? '';
+    _artistController.text = widget.songData['songArtist'] ?? '';
+
+    selectedKey = widget.songData['songOriginalKey'] ?? keys[0];
+    selectedSongType = widget.songData['songType'] ?? songTypes[0];
+    selectedLanguage = widget.songData['songLanguage'] ?? languages[0];
   }
 
-  Future<void> _saveSong() async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')));
-      return;
-    }
+  Future<void> _updateSong() async {
+    try {
+      String? songId =
+          widget.songData['id']; // Ensure songId is properly retrieved
+      if (songId == null) {
+        print('Song ID is null, cannot update the song.');
+        return;
+      }
 
-    if (_songTitleController.text.isNotEmpty &&
-        _artistController.text.isNotEmpty &&
-        selectedKey != null &&
-        _chordsAndLyricsController.text.isNotEmpty &&
-        selectedSongType != null &&
-        selectedLanguage != null) {
-      await _firestore.collection('userAddSong').add({
-        'userId': user.uid, // Store userId from Firebase Authentication
+      // Reference the Firestore document using the song ID
+      await FirebaseFirestore.instance
+          .collection('userAddSong')
+          .doc(songId) // Use the passed ID here
+          .update({
         'songTitle': _songTitleController.text,
         'songArtist': _artistController.text,
-        'songOriginalKey': selectedKey,
+        'songLink': _linkController.text,
         'songChordsAndLyrics': _chordsAndLyricsController.text,
+        'songOriginalKey': selectedKey,
         'songType': selectedSongType,
         'songLanguage': selectedLanguage,
-        'songLink': _linkController.text,
-        'timestamp': FieldValue.serverTimestamp(), // Add timestamp field
       });
 
-      _clearFields();
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Song saved successfully')));
-
-      // Navigate to UserDashboard after saving the song
+      // Navigate to the UserDashboard page after the update
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) => UserDashboard()), // Navigate to UserDashboard
+        MaterialPageRoute(builder: (context) => UserDashboard()),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill in all required fields')));
+    } catch (e) {
+      print("Error updating song: $e");
     }
-  }
-
-  void _clearFields() {
-    _songTitleController.clear();
-    _chordsAndLyricsController.clear();
-    _linkController.clear();
-    _artistController.clear();
-    selectedKey = null;
-    selectedSongType = null;
-    selectedLanguage = null;
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Song'),
-        backgroundColor: const Color(0xFFB4BA1C), // Custom color for the AppBar
-        elevation: 4.0,
+        title: const Text('Edit Song'),
+        backgroundColor: const Color(0xFFB4BA1C),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Go back to the previous screen
+            Navigator.pop(context);
           },
         ),
       ),
@@ -131,39 +109,24 @@ class _AddSongTabState extends State<AddMySongTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Other Input Fields
+              const SizedBox(height: 20),
               _buildTextField('Song Title', _songTitleController),
               _buildTextField('Song Artist', _artistController),
               _buildDropdown('Original Key', keys, selectedKey,
                   (value) => setState(() => selectedKey = value)),
-
-              // Instruction before the Chords and Lyrics text field
-              const SizedBox(height: 8),
-              Text(
-                'Each line with chords should start with the ">" symbol.',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              // Chords and Lyrics TextField
               _buildTextField('Chords and Lyrics', _chordsAndLyricsController,
                   maxLines: 6),
-
               _buildDropdown('Song Type', songTypes, selectedSongType,
                   (value) => setState(() => selectedSongType = value)),
               _buildDropdown('Song Language', languages, selectedLanguage,
                   (value) => setState(() => selectedLanguage = value)),
               _buildTextField('Link', _linkController),
               const SizedBox(height: 20),
-
-              // Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _buildButton('Clear', Icons.clear, _clearFields),
-                  const SizedBox(width: 10),
-                  _buildButton('Save', Icons.save, _saveSong),
+                  _buildButton('Update', Icons.save,
+                      _updateSong), // Update button action
                 ],
               ),
             ],
@@ -186,8 +149,10 @@ class _AddSongTabState extends State<AddMySongTab> {
           decoration: InputDecoration(
             hintText: 'Enter $label',
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFFB4BA1C), width: 1.0),
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
               borderSide:
@@ -215,29 +180,37 @@ class _AddSongTabState extends State<AddMySongTab> {
           onChanged: onChanged,
           decoration: InputDecoration(
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Color(0xFFB4BA1C))),
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFFB4BA1C), width: 1.0),
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
               borderSide:
                   const BorderSide(color: Color(0xFFB4BA1C), width: 2.0),
             ),
           ),
-          hint: Text('Select $label'),
         ),
         const SizedBox(height: 20),
       ],
     );
   }
 
-  Widget _buildButton(String label, IconData icon, VoidCallback onPressed) {
+  Widget _buildButton(String text, IconData icon, VoidCallback onPressed) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, color: Colors.black),
-      label: Text(label, style: const TextStyle(color: Colors.black)),
+      icon: Icon(icon, size: 18, color: Colors.black),
+      label: Text(
+        text,
+        style:
+            const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+      ),
       style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFB4BA1C),
-          minimumSize: const Size(100, 40)),
+        backgroundColor: const Color(0xFFB4BA1C),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        minimumSize: const Size(150, 40),
+      ),
     );
   }
 }

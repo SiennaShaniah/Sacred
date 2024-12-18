@@ -1,81 +1,132 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/User/UserTabs/addMySong.dart'; // Replace with your actual import path for AddMySongTab
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_project/User/UserTabs/addMySong.dart';
+import 'userEditMySong.dart'; // Import the UserMySongEdit page
 
-class Mysongs extends StatelessWidget {
+class Mysongs extends StatefulWidget {
   const Mysongs({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Sample data for songs
-    final List<Map<String, dynamic>> songs = [
-      {
-        'id': '1',
-        'title': 'Amazing Grace',
-        'artist': 'John Newton',
-        'image': 'https://example.com/image1.jpg',
-        'isFavorite': true,
-      },
-      {
-        'id': '2',
-        'title': 'How Great Thou Art',
-        'artist': 'Carl Boberg',
-        'image': 'https://example.com/image2.jpg',
-        'isFavorite': false,
-      },
-    ];
+  _MysongsState createState() => _MysongsState();
+}
 
-    // Callbacks to handle actions
-    void onFilterPressed() {
-      // Handle filter logic
-      print('Filter button pressed');
+class _MysongsState extends State<Mysongs> {
+  List<Map<String, dynamic>> songs = [];
+  List<Map<String, dynamic>> filteredSongs = [];
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSongs();
+  }
+
+  Future<void> fetchSongs() async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('userAddSong').get();
+
+      setState(() {
+        songs = snapshot.docs.map((doc) {
+          return {
+            'id': doc.id,
+            'title': doc['songTitle'],
+            'artist': doc['songArtist'],
+            'image': 'lib/Images/bible.jpg', // Default local image
+          };
+        }).toList();
+        filteredSongs = songs;
+      });
+    } catch (e) {
+      print('Error fetching songs: $e');
     }
+  }
 
-    void onSearchChanged(String query) {
-      // Handle search query change
-      print('Search query: $query');
-    }
+  void onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query;
+      if (_searchQuery.isEmpty) {
+        filteredSongs = songs;
+      } else {
+        filteredSongs = songs.where((song) {
+          return song['title']!
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              song['artist']!
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase());
+        }).toList();
+      }
+    });
+  }
 
-    void onToggleFavorite(String id, bool isFavorite) {
-      // Handle toggle favorite logic
-      print('Toggled favorite for song $id, new state: $isFavorite');
-    }
-
-    // Action when floating button is pressed
-    void onAddSong() {
-      // Navigate to AddMySongTab when the floating action button is pressed
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                AddMySongTab()), // AddMySongTab should be the screen you want to navigate to
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'My Songs',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24.0,
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 2.0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Color(0xFFB4BA1C)),
-            onPressed: onFilterPressed,
-          ),
-        ],
+  void onAddSong() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddMySongTab(),
       ),
+    );
+  }
+
+  void onEditSong(String songId) {
+    FirebaseFirestore.instance
+        .collection('userAddSong')
+        .doc(songId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        // Get the data from the document
+        final songData = doc.data() as Map<String, dynamic>?;
+
+        if (songData != null) {
+          // Pass the song data and the document ID to the edit screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserMySongEdit(
+                songData: {
+                  'id': doc.id, // Pass the Firestore document ID here
+                  ...songData, // Merge the song data
+                },
+              ),
+            ),
+          );
+        } else {
+          print("Song data is null.");
+        }
+      } else {
+        print("Song not found.");
+      }
+    }).catchError((e) {
+      print("Error fetching song: $e");
+    });
+  }
+
+  void onDeleteSong(String songId) {
+    FirebaseFirestore.instance.collection('userAddSong').doc(songId).delete();
+    setState(() {
+      songs.removeWhere((song) => song['id'] == songId);
+      filteredSongs = songs;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Bar
+            Text(
+              'My Songs',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24.0,
+                  color: Colors.black),
+            ),
+            SizedBox(height: 16.0),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: TextField(
@@ -96,13 +147,11 @@ class Mysongs extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Song List
             Expanded(
               child: ListView.builder(
-                itemCount: songs.length,
+                itemCount: filteredSongs.length,
                 itemBuilder: (context, index) {
-                  final song = songs[index];
+                  final song = filteredSongs[index];
 
                   return Card(
                     color: Colors.white,
@@ -116,10 +165,10 @@ class Mysongs extends StatelessWidget {
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(10.0),
                         child: SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Image.network(
-                            song['image'] ?? '',
+                          width: 120,
+                          height: 150,
+                          child: Image.asset(
+                            song['image'],
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -138,19 +187,28 @@ class Mysongs extends StatelessWidget {
                           color: Color(0xFFB4BA1C),
                         ),
                       ),
-                      trailing: IconButton(
+                      trailing: PopupMenuButton<String>(
                         icon: Icon(
-                          song['isFavorite']
-                              ? Icons.bookmark
-                              : Icons.bookmark_border,
-                          color: song['isFavorite']
-                              ? const Color(0xFFB4BA1C)
-                              : Colors.grey,
+                          Icons.more_vert,
+                          color: Color(0xFFB4BA1C),
                         ),
-                        onPressed: () => onToggleFavorite(
-                          song['id'],
-                          song['isFavorite'],
-                        ),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            onEditSong(song['id']);
+                          } else if (value == 'delete') {
+                            onDeleteSong(song['id']);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem<String>(
+                            value: 'edit',
+                            child: Text('Edit'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Text('Delete'),
+                          ),
+                        ],
                       ),
                     ),
                   );

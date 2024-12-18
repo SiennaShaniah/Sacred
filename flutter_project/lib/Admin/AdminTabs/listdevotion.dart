@@ -238,8 +238,8 @@ class DailyDevotionalListTab extends StatelessWidget {
                             );
                           },
                         );
-                        if (picked != null && picked != selectedDate) {
-                          selectedDate = picked;
+                        if (picked != selectedDate) {
+                          selectedDate = picked!;
                         }
                       },
                     ),
