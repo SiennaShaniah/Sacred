@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Import the url_launcher package
-import 'dart:async'; // For Timer
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase Firestore
+import 'dart:async';
 
 class MainChordsAndLyrics extends StatefulWidget {
   final String title;
@@ -10,37 +12,41 @@ class MainChordsAndLyrics extends StatefulWidget {
   final String chordsAndLyrics;
 
   const MainChordsAndLyrics({
-    Key? key,
+    super.key,
     required this.title,
     required this.artist,
     required this.originalkey,
     required this.link,
     required this.chordsAndLyrics,
-  }) : super(key: key);
+  });
 
   @override
   _MainChordsAndLyricsState createState() => _MainChordsAndLyricsState();
 }
 
 class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
-  bool isPlaying = false; // To toggle between play and pause state
+  bool isPlaying = false;
   late ScrollController _scrollController;
-  double _fontSize = 16.0; // Default font size for lyrics
-  Timer? _scrollTimer; // Timer for periodic scrolling
+  double _fontSize = 16.0;
+  Timer? _scrollTimer;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    _scrollController =
+        ScrollController(); // Initialize the ScrollController here
   }
+
+  // Firebase Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Function to launch URL
   Future<void> _launchURL() async {
     final url = widget.link;
     if (await canLaunch(url)) {
-      await launch(url); // Open the link in the browser
+      await launch(url);
     } else {
-      throw 'Could not launch $url'; // Error handling if the link can't be opened
+      throw 'Could not launch $url';
     }
   }
 
@@ -51,53 +57,108 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
     });
 
     if (isPlaying) {
-      // Start the timer for continuous scrolling
       _scrollTimer = Timer.periodic(Duration(seconds: 2), (timer) {
         _scrollToNextLine();
       });
     } else {
-      // Stop the timer when pausing
       _scrollTimer?.cancel();
     }
   }
 
-  // Scroll to the next line every 2 seconds while playing
   void _scrollToNextLine() {
     if (_scrollController.hasClients) {
-      // Scroll to the next line with slower speed
       _scrollController.animateTo(
-        _scrollController.offset +
-            20, // Adjust 20 to control scroll speed (smoother)
-        duration: Duration(milliseconds: 300), // Duration for smoother scroll
-        curve: Curves.easeInOut, // Smoother curve for animation
+        _scrollController.offset + 20,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
       );
     }
   }
 
-  // Zoom-in function to increase the font size
   void _zoomIn() {
     setState(() {
       if (_fontSize < 30.0) {
-        // Limit the maximum zoom level
-        _fontSize += 2.0; // Increase font size
+        _fontSize += 2.0;
       }
     });
   }
 
-  // Zoom-out function to decrease the font size
   void _zoomOut() {
     setState(() {
       if (_fontSize > 10.0) {
-        // Limit the minimum zoom level
-        _fontSize -= 2.0; // Decrease font size
+        _fontSize -= 2.0;
       }
     });
+  }
+
+  // Fetch lineups of the user
+  Future<List<Map<String, dynamic>>> _getUserLineups() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return [];
+    }
+
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    try {
+      // Fetch lineups from Firestore
+      QuerySnapshot snapshot = await _firestore
+          .collection('myLineUp')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      List<Map<String, dynamic>> lineups = [];
+      snapshot.docs.forEach((doc) {
+        lineups.add({
+          'lineUpName': doc['lineUpName'],
+          'lineUpId': doc.id,
+        });
+      });
+
+      print("Fetched lineups: $lineups"); // Debugging line
+      return lineups;
+    } catch (e) {
+      print("Error fetching lineups: $e"); // Error handling and debugging
+      return [];
+    }
+  }
+
+  // Add song to selected lineup
+  void _addSongToLineup(String lineupId) async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Define the song details to add to the lineup
+      var song = {
+        'songTitle': widget.title,
+        'songArtist': widget.artist,
+        'songLink': widget.link,
+        'songChordsAndLyrics': widget.chordsAndLyrics,
+        'songOriginalKey': widget.originalkey,
+      };
+
+      // Add the song to the selected lineup
+      await _firestore.collection('myLineUp').doc(lineupId).update({
+        'songs': FieldValue.arrayUnion([song]),
+      });
+
+      // Show a confirmation message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Song added to the lineup')),
+      );
+    } catch (e) {
+      // Show an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add song to lineup: $e')),
+      );
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _scrollTimer?.cancel(); // Cancel the timer when disposing
+    _scrollTimer?.cancel();
     super.dispose();
   }
 
@@ -110,53 +171,72 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
           icon:
               const Icon(Icons.arrow_back, color: Color.fromARGB(255, 0, 0, 0)),
           onPressed: () {
-            Navigator.pop(context); // Go back to the previous screen
+            Navigator.pop(context);
           },
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.title, // Song Title
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 0, 0, 0),
-              ),
-            ),
+            Text(widget.title,
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 0, 0, 0))),
             const SizedBox(height: 4),
-            Text(
-              widget.artist, // Song Artist
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color.fromARGB(255, 73, 69, 69),
-              ),
-            ),
+            Text(widget.artist,
+                style: const TextStyle(
+                    fontSize: 16, color: Color.fromARGB(255, 73, 69, 69))),
           ],
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              isPlaying ? Icons.pause : Icons.play_arrow,
-              color: Color(0xFF363636),
-            ),
-            onPressed: _togglePlayPause, // Handle play/pause button
+            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow,
+                color: Color(0xFF363636)),
+            onPressed: _togglePlayPause,
           ),
           IconButton(
-            icon: const Icon(Icons.zoom_in, color: Color(0xFF363636)),
-            onPressed: _zoomIn, // Handle zoom-in action
-          ),
+              icon: const Icon(Icons.zoom_in, color: Color(0xFF363636)),
+              onPressed: _zoomIn),
           IconButton(
-            icon: const Icon(Icons.zoom_out, color: Color(0xFF363636)),
-            onPressed: _zoomOut, // Handle zoom-out action
-          ),
+              icon: const Icon(Icons.zoom_out, color: Color(0xFF363636)),
+              onPressed: _zoomOut),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Color(0xFF363636)),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'Add to lineup') {
-                // Show lineup dialog
-              } else if (value == 'Add to favorites') {
-                // Add to favorites logic
+                // Fetch user lineups and display a dialog
+                List<Map<String, dynamic>> lineups = await _getUserLineups();
+                if (lineups.isEmpty) {
+                  // Show a message if no lineups are found
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('No lineups found. Please create one first.')),
+                  );
+                } else {
+                  // Show a dialog with the list of lineups
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text('Select Lineup'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: lineups.map((lineup) {
+                            return ListTile(
+                              title: Text(lineup['lineUpName']),
+                              onTap: () {
+                                // Add the song to the selected lineup
+                                _addSongToLineup(lineup['lineUpId']);
+                                Navigator.pop(context);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  );
+                }
               }
             },
             itemBuilder: (BuildContext context) {
@@ -165,52 +245,33 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
                   value: 'Add to lineup',
                   child: Text('Add to lineup'),
                 ),
-                const PopupMenuItem<String>(
-                  value: 'Add to favorites',
-                  child: Text('Add to favorites'),
-                ),
               ];
             },
           ),
         ],
       ),
       body: SingleChildScrollView(
-        controller: _scrollController, // Attach the scroll controller
+        controller: _scrollController,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // Display the original key
-              Text(
-                'Original Key: ${widget.originalkey}', // Show the original key from the database
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(
-                  height: 10), // Space between the original key and lyrics
-              // Display the lyrics directly from the database
-              Text(
-                widget.chordsAndLyrics,
-                style: TextStyle(
-                    fontSize: _fontSize,
-                    color: Colors.black), // Adjust font size
-              ),
+              Text('Original Key: ${widget.originalkey}',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.black)),
+              const SizedBox(height: 10),
+              Text(widget.chordsAndLyrics,
+                  style: TextStyle(fontSize: _fontSize, color: Colors.black)),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _launchURL, // Call the function to launch the link
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Button background color
-                ),
-                child: Text(
-                  'Open Song Link',
-                  style: TextStyle(
-                      color: Color(0xFFB4BA1C)), // Set button text color
-                ),
+                onPressed: _launchURL,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                child: Text('Open Song Link',
+                    style: TextStyle(color: Color(0xFFB4BA1C))),
               ),
             ],
           ),

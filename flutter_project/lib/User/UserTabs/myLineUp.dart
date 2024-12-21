@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import intl package
+import 'package:intl/intl.dart';
+
+import 'lyricsChords.dart'; // Import intl package
 
 class MyLineUp extends StatelessWidget {
   const MyLineUp({super.key});
@@ -14,11 +16,12 @@ class MyLineUp extends StatelessWidget {
       final timestamp = FieldValue.serverTimestamp();
 
       try {
-        // Add the new lineup to Firestore
+        // Add the new lineup to Firestore with an empty songs array
         await FirebaseFirestore.instance.collection('myLineUp').add({
           'userId': userId,
           'lineUpName': lineupTitle,
           'timestamp': timestamp,
+          'songs': [], // Initialize the songs array
         });
 
         // Show a success message
@@ -143,8 +146,7 @@ class MyLineUp extends StatelessWidget {
                   .collection('myLineUp')
                   .where('userId',
                       isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-                  .orderBy('timestamp',
-                      descending: true) // Changed to ascending
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -166,7 +168,7 @@ class MyLineUp extends StatelessWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 10.0,
                     mainAxisSpacing: 10.0,
-                    childAspectRatio: 1.0, // Adjusted for a square ratio
+                    childAspectRatio: 1.0,
                   ),
                   itemCount: lineups.length,
                   itemBuilder: (context, index) {
@@ -179,81 +181,92 @@ class MyLineUp extends StatelessWidget {
                     final formattedDate =
                         DateFormat('MM/dd/yyyy').format(timestamp);
 
-                    return Card(
-                      color: const Color(0xFFB4BA1C).withOpacity(0.5),
-                      elevation: 3.0,
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Column(
-                        mainAxisSize:
-                            MainAxisSize.min, // Use min to prevent overflow
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: Image.asset(
-                                    'lib/Images/bible.jpg',
-                                    width: double.infinity,
-                                    height: 150,
-                                    fit: BoxFit.cover,
+                    return GestureDetector(
+                      onTap: () {
+                        // Navigate to the new page showing the lineup's songs
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                LineUpDetailsPage(lineupId: lineupId),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: const Color(0xFFB4BA1C).withOpacity(0.5),
+                        elevation: 3.0,
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(5),
+                                    child: Image.asset(
+                                      'lib/Images/bible.jpg',
+                                      width: double.infinity,
+                                      height: 150,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                ),
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: PopupMenuButton<String>(
-                                    icon: const Icon(Icons.more_vert,
-                                        color: Colors.black, size: 30),
-                                    onSelected: (value) {
-                                      if (value == 'delete') {
-                                        _deleteLineUp(lineupId, context);
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      return [
-                                        const PopupMenuItem<String>(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.delete,
-                                                  color: Color(0xFFB4BA1C)),
-                                              SizedBox(width: 8),
-                                              Text('Delete'),
-                                            ],
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: PopupMenuButton<String>(
+                                      icon: const Icon(Icons.more_vert,
+                                          color: Colors.black, size: 30),
+                                      onSelected: (value) {
+                                        if (value == 'delete') {
+                                          _deleteLineUp(lineupId, context);
+                                        }
+                                      },
+                                      itemBuilder: (BuildContext context) {
+                                        return [
+                                          const PopupMenuItem<String>(
+                                            value: 'delete',
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.delete,
+                                                    color: Color(0xFFB4BA1C)),
+                                                SizedBox(width: 8),
+                                                Text('Delete'),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ];
-                                    },
+                                        ];
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  lineupTitle,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                  overflow: TextOverflow.ellipsis,
-                                  softWrap: true,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  formattedDate, // Display formatted date
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.white),
-                                ),
-                              ],
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    lineupTitle,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    formattedDate,
+                                    style: const TextStyle(
+                                        fontSize: 16, color: Colors.white),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -269,5 +282,191 @@ class MyLineUp extends StatelessWidget {
         child: const Icon(Icons.add, color: Colors.black),
       ),
     );
+  }
+}
+
+class LineUpDetailsPage extends StatefulWidget {
+  final String lineupId;
+
+  const LineUpDetailsPage({super.key, required this.lineupId});
+
+  @override
+  _LineUpDetailsPageState createState() => _LineUpDetailsPageState();
+}
+
+class _LineUpDetailsPageState extends State<LineUpDetailsPage> {
+  late List<dynamic> songs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Lineup Songs'),
+        backgroundColor: const Color(0xFFB4BA1C),
+      ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('myLineUp')
+            .doc(widget.lineupId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('No songs available.'));
+          }
+
+          final lineupData = snapshot.data!;
+          songs = List<dynamic>.from(lineupData['songs'] ?? []);
+
+          if (songs.isEmpty) {
+            return const Center(child: Text('No songs in this lineup.'));
+          }
+
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10.0),
+                Expanded(
+                  child: ReorderableListView(
+                    onReorder: _onReorder,
+                    children: List.generate(songs.length, (index) {
+                      final song = songs[index];
+                      return Card(
+                        key: ValueKey(song['songTitle']),
+                        color: Colors.white,
+                        elevation: 6.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(10.0),
+                            child: SizedBox(
+                              width: 120,
+                              height: 150,
+                              child: Image.asset(
+                                'lib/Images/bible.jpg', // Placeholder image
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            song['songTitle'] ?? 'Untitled',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          subtitle: Text(
+                            song['songArtist'] ?? 'Unknown',
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Color(0xFFB4BA1C),
+                            ),
+                          ),
+                          onTap: () {
+                            // Navigate to the song details or lyrics page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MainChordsAndLyrics(
+                                  title: song['songTitle'] ?? 'Untitled',
+                                  artist: song['songArtist'] ?? 'Unknown',
+                                  originalkey: song['songOriginalKey'] ??
+                                      'C', // Default key if null
+                                  link: song['songLink'] ?? '',
+                                  chordsAndLyrics:
+                                      song['songChordsAndLyrics'] ?? '',
+                                ),
+                              ),
+                            );
+                          },
+                          trailing: PopupMenuButton<String>(
+                            icon: const Icon(
+                              Icons.more_vert,
+                              color: Color(0xFFB4BA1C),
+                            ),
+                            onSelected: (value) {
+                              if (value == 'remove') {
+                                _removeSongFromLineup(song['songTitle']);
+                              }
+                            },
+                            itemBuilder: (BuildContext context) {
+                              return [
+                                PopupMenuItem<String>(
+                                  value: 'remove',
+                                  child: const Text('Remove Song'),
+                                ),
+                              ];
+                            },
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Handle reordering of the songs
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final song = songs.removeAt(oldIndex);
+      songs.insert(newIndex, song);
+
+      // Optionally, update the order in Firestore
+      FirebaseFirestore.instance
+          .collection('myLineUp')
+          .doc(widget.lineupId)
+          .update({'songs': songs});
+    });
+  }
+
+  // Remove song from the selected lineup
+  Future<void> _removeSongFromLineup(String songTitle) async {
+    try {
+      // Find the song to be removed (we are assuming the song object has more fields than just title)
+      final songToRemove = songs.firstWhere(
+        (song) => song['songTitle'] == songTitle,
+        orElse: () => null,
+      );
+
+      if (songToRemove != null) {
+        // Remove the exact song object from the Firestore lineup
+        await FirebaseFirestore.instance
+            .collection('myLineUp')
+            .doc(widget.lineupId)
+            .update({
+          'songs': FieldValue.arrayRemove([songToRemove]),
+        });
+
+        // Update the local songs list after removal
+        setState(() {
+          songs.remove(songToRemove);
+        });
+      }
+    } catch (e) {
+      print('Error removing song: $e');
+    }
   }
 }

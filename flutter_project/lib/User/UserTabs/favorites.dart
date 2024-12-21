@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'myfavoritesChordsAndLyrics.dart';
+
 class Favorites extends StatefulWidget {
   const Favorites({super.key});
 
@@ -27,48 +29,59 @@ class _FavoritesState extends State<Favorites> {
 
   Future<void> fetchFavoriteSongs() async {
     try {
-      // Get the current logged-in user's ID
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
       if (userId != null) {
-        print('Fetching favorite songs for user: $userId'); // Debugging user ID
+        print('Fetching favorite songs for user: $userId');
 
-        final querySnapshot = await _firestore
-            .collection('songs')
-            .where('isFavorite', isEqualTo: true)
-            .where('userId', isEqualTo: userId) // Filter by user ID
+        final favoritesSnapshot = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('favorites')
             .get();
 
-        if (querySnapshot.docs.isEmpty) {
-          print('No favorite songs found for user'); // Debugging: No data found
+        if (favoritesSnapshot.docs.isEmpty) {
+          print('No favorite songs found for user');
         } else {
-          print(
-              'Found ${querySnapshot.docs.length} favorite songs'); // Debugging query results
+          print('Found ${favoritesSnapshot.docs.length} favorite songs');
         }
 
+        final favoriteSongIds = favoritesSnapshot.docs
+            .map((doc) => doc['songId'] as String?)
+            .whereType<String>() // Ensure it's not null
+            .toList();
+
+        final songsSnapshot = await _firestore
+            .collection('songs')
+            .where(FieldPath.documentId, whereIn: favoriteSongIds)
+            .get();
+
         setState(() {
-          favoriteSongs = querySnapshot.docs.map((doc) {
+          favoriteSongs = songsSnapshot.docs.map((doc) {
             return {
-              'title': doc['title'],
-              'artist': doc['artist'],
-              'image': doc['imagePath'],
-              'isFavorite': doc['isFavorite'] ?? false,
+              'title': doc['title'] ?? 'Untitled',
+              'artist': doc['artist'] ?? 'Unknown Artist',
+              'image': doc['imagePath'] ?? '',
+              'isFavorite': true,
               'id': doc.id,
-              'type': doc['type'],
-              'language': doc['language'],
+              'type': doc['type'] ?? 'Unknown',
+              'language': doc['language'] ?? 'Unknown',
+              'originalkey': doc['originalkey'] ?? 'Unknown',
+              'link': doc['link'] ?? '',
+              'chordsAndLyrics': doc['chordsAndLyrics'] ?? '',
             };
           }).toList();
 
           filteredSongs = List.from(favoriteSongs);
 
-          // Get unique artists for filtering
           artists = favoriteSongs
-              .map((song) => song['artist'] as String)
+              .map((song) => song['artist'] as String?)
+              .whereType<String>()
               .toSet()
               .toList();
         });
       } else {
-        print('User is not logged in'); // Debugging: No user logged in
+        print('User is not logged in');
       }
     } catch (e) {
       print('Error fetching favorite songs: $e');
@@ -268,17 +281,6 @@ class _FavoritesState extends State<Favorites> {
     );
   }
 
-  Future<void> toggleFavorite(String songId, bool currentFavoriteStatus) async {
-    try {
-      await _firestore.collection('songs').doc(songId).update({
-        'isFavorite': !currentFavoriteStatus,
-      });
-      fetchFavoriteSongs();
-    } catch (e) {
-      print('Error updating favorite status: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -360,37 +362,38 @@ class _FavoritesState extends State<Favorites> {
                       ),
                     ),
                     title: Text(
-                      song['title']!,
+                      song['title'] ?? 'Untitled',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      song['artist']!,
+                      song['artist'] ?? 'Unknown Artist',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFFB4BA1C),
                       ),
                     ),
-                    trailing: IconButton(
-                      icon: Icon(
-                        song['isFavorite']
-                            ? Icons.bookmark
-                            : Icons.bookmark_border,
-                        color: song['isFavorite']
-                            ? const Color(0xFFB4BA1C)
-                            : Colors.grey,
-                      ),
-                      onPressed: () {
-                        toggleFavorite(song['id'], song['isFavorite']);
-                      },
-                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyfavoritesChordsAndLyrics(
+                            title: song['title'],
+                            artist: song['artist'],
+                            originalkey: song['originalkey'],
+                            link: song['link'],
+                            chordsAndLyrics: song['chordsAndLyrics'],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          ),
+          )
         ],
       ),
     );
