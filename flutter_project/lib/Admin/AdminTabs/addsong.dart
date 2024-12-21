@@ -28,7 +28,10 @@ class _AddSongTabState extends State<AddSongTab> {
   final List<String> imagePaths = [
     'lib/Images/imagesDropdown/ElevationWorship.jpg',
     'lib/Images/imagesDropdown/CastingCrowns.jpg',
-    'lib/Images/imagesDropdown/MjFlores.jpg'
+    'lib/Images/imagesDropdown/MjFlores.jpg',
+    'lib/Images/imagesDropdown/default.jpg',
+    'lib/Images/imagesDropdown/papuri.jpg',
+    'lib/Images/imagesDropdown/victoryband.jpg'
   ];
 
   // Dropdown options

@@ -17,13 +17,13 @@ class _SongListTabState extends State<SongListTab> {
   String selectedLanguage = 'All Languages';
   String selectedType = 'All Types';
   String? selectedArtist;
-  List<String> artists = []; // List to store artists
+  List<String> artists = [];
 
   @override
   void initState() {
     super.initState();
     _loadSongs();
-    _loadArtists(); // Load artists from Firestore
+    _loadArtists();
   }
 
   Future<void> _loadSongs() async {
@@ -48,7 +48,7 @@ class _SongListTabState extends State<SongListTab> {
                 doc.data().containsKey('song_link') ? doc['song_link'] : '',
           };
         }).toList();
-        filteredSongs = List.from(songs); // Initially display all songs
+        filteredSongs = List.from(songs);
       });
     } catch (e) {
       print("Error loading songs: $e");
@@ -107,22 +107,55 @@ class _SongListTabState extends State<SongListTab> {
     });
   }
 
-  Future<void> _archiveSong(String songId) async {
-    await _firestore.collection('songs').doc(songId).update({
-      'archived': true, // Mark the song as archived
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Song archived successfully')),
-    );
-    _loadSongs(); // Reload songs
+  Future<void> _deleteSong(String songId) async {
+    try {
+      // Delete the song from Firestore
+      await _firestore.collection('songs').doc(songId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Song deleted successfully')),
+      );
+      _loadSongs(); // Reload songs after deletion
+    } catch (e) {
+      print("Error deleting song: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting song: $e")),
+      );
+    }
   }
 
   void _navigateToEditSongScreen(Map<String, dynamic> songData) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditSong(songData: songData), // Passing songData
+        builder: (context) => EditSong(songData: songData),
       ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(String songId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this song?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog without deleting
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                _deleteSong(songId); // Delete the song
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -139,23 +172,23 @@ class _SongListTabState extends State<SongListTab> {
                   title: const Text('Language'),
                   onTap: () {
                     Navigator.pop(context);
-                    _showLanguageSortDialog(); // Show language filter options
+                    _showLanguageSortDialog();
                   },
                 ),
-                Divider(), // Divider added
+                Divider(),
                 ListTile(
                   title: const Text('Type'),
                   onTap: () {
                     Navigator.pop(context);
-                    _showTypeSortDialog(); // Show type filter options
+                    _showTypeSortDialog();
                   },
                 ),
-                Divider(), // Divider added
+                Divider(),
                 ListTile(
                   title: const Text('Artist'),
                   onTap: () {
                     Navigator.pop(context);
-                    _showArtistSortDialog(); // Show artist filter options
+                    _showArtistSortDialog();
                   },
                 ),
               ],
@@ -263,7 +296,6 @@ class _SongListTabState extends State<SongListTab> {
                   _filterByArtist(null);
                 },
               ),
-              // Dynamically generate artist filter options
               ...artists.map((artist) {
                 return ListTile(
                   title: Text(artist),
@@ -285,34 +317,26 @@ class _SongListTabState extends State<SongListTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title with Funnel Icon for Sorting
         Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 16.0, vertical: 8.0), // Reduced vertical padding
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Song List',
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
               ),
               IconButton(
                 icon: Icon(Icons.filter_alt_outlined, color: Color(0xFFB4BA1C)),
-                onPressed: _showSortOptions, // Open sort options on click
+                onPressed: _showSortOptions,
               ),
             ],
           ),
         ),
-
-        // Song List
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16.0, vertical: 8.0), // Reduced vertical padding
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             itemCount: filteredSongs.length,
             itemBuilder: (context, index) {
               final song = filteredSongs[index];
@@ -335,23 +359,19 @@ class _SongListTabState extends State<SongListTab> {
                   title: Text(
                     song["title"],
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                        fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   subtitle: Text(
                     song["artist"],
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFFB4BA1C),
-                    ),
+                    style:
+                        const TextStyle(fontSize: 12, color: Color(0xFFB4BA1C)),
                   ),
                   trailing: PopupMenuButton<String>(
                     onSelected: (String value) {
                       if (value == 'edit') {
                         _navigateToEditSongScreen(song);
-                      } else if (value == 'archive') {
-                        _archiveSong(song["id"]);
+                      } else if (value == 'delete') {
+                        _showDeleteConfirmationDialog(song["id"]);
                       }
                     },
                     itemBuilder: (BuildContext context) {
@@ -367,12 +387,12 @@ class _SongListTabState extends State<SongListTab> {
                           ),
                         ),
                         const PopupMenuItem<String>(
-                          value: 'archive',
+                          value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.archive, color: Color(0xFFB4BA1C)),
+                              Icon(Icons.delete, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('Archive'),
+                              Text('Delete'),
                             ],
                           ),
                         ),

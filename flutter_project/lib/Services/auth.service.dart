@@ -80,7 +80,7 @@ class AuthService {
     }
   }
 
-  // Login method
+// Login method
   Future<bool> signin({
     required String email,
     required String password,
@@ -101,17 +101,13 @@ class AuthService {
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
 
-      // Fetch user data from Firestore
-      String username = await _getUsername(userCredential.user!.uid);
-
+      // Check if the user is an admin or regular user
       if (email == 'admin@example.com') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (BuildContext context) => const Admin()),
         );
       } else {
-        // Navigate to User dashboard or replace with user screen
-        _showToast('Welcome, $username!');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -120,6 +116,7 @@ class AuthService {
         );
       }
 
+      // Show login success toast
       _showToast('Login successful!');
       return true;
     } on FirebaseAuthException catch (e) {

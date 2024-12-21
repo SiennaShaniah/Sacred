@@ -16,14 +16,18 @@ class _RegScreenState extends State<RegScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _usernameController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _usernameController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -31,14 +35,13 @@ class _RegScreenState extends State<RegScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
-    final username = _usernameController.text.trim();
 
     if (password != confirmPassword) {
       _showToast('Passwords do not match');
       return;
     }
 
-    if (email.isEmpty || password.isEmpty || username.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       _showToast('All fields are required');
       return;
     }
@@ -48,12 +51,11 @@ class _RegScreenState extends State<RegScreen> {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Save username to Firestore
+      // Save email to Firestore (no username anymore)
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid) // Use the Firebase user UID
           .set({
-        'username': username,
         'email': email,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -126,24 +128,28 @@ class _RegScreenState extends State<RegScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
-                        ),
-                      ),
-                    ),
+                    // Removed username TextField
                     const SizedBox(height: 20),
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      focusNode: _emailFocusNode,
+                      decoration: InputDecoration(
                         labelText: 'Gmail',
                         hintText: 'Enter your Gmail',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Color(0xFFB4BA1C), // Focused border color
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Colors.black, // Unfocused border color
+                          ),
                         ),
                       ),
                     ),
@@ -151,11 +157,24 @@ class _RegScreenState extends State<RegScreen> {
                     TextField(
                       controller: _passwordController,
                       obscureText: !_passwordVisible,
+                      focusNode: _passwordFocusNode,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter your password',
                         border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Color(0xFFB4BA1C),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Colors.black,
+                          ),
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -175,11 +194,24 @@ class _RegScreenState extends State<RegScreen> {
                     TextField(
                       controller: _confirmPasswordController,
                       obscureText: !_confirmPasswordVisible,
+                      focusNode: _confirmPasswordFocusNode,
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         hintText: 'Confirm your password',
                         border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Color(0xFFB4BA1C),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          borderSide: BorderSide(
+                            color: Colors.black,
+                          ),
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(

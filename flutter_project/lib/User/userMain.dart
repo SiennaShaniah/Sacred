@@ -47,11 +47,17 @@ class _UserDashboardState extends State<UserDashboard> {
 
         if (userData.exists) {
           setState(() {
-            username = userData['username'] ?? 'User';
+            username = userData['username'] ??
+                'User Page'; // Set 'User Page' if username not found
           });
         } else {
+          setState(() {
+            username = 'User Page'; // Set default if no username found
+          });
           print('User data not found');
         }
+      } else {
+        print('No user logged in');
       }
     } catch (e) {
       print('Error fetching user data: $e');
@@ -141,7 +147,7 @@ class _UserDashboardState extends State<UserDashboard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                username.isEmpty ? 'Loading...' : username,
+                                'User Page', // Replaced username with 'User Page'
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 18,
@@ -251,7 +257,7 @@ class _UserDashboardState extends State<UserDashboard> {
       case 3:
         return Mysongs();
       case 4:
-        return const tools();
+        return const Tools();
       case 5:
         return const UserDailyDevo();
       default:

@@ -18,6 +18,34 @@ class _LoginScreenState extends State<loginScreen> {
   bool _passwordVisible = false;
   final AuthService _authService = AuthService();
 
+  // FocusNodes to handle focus status
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen for changes in the focus state of the email field
+    _emailFocusNode.addListener(() {
+      setState(() {});
+    });
+
+    // Listen for changes in the focus state of the password field
+    _passwordFocusNode.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,19 +94,34 @@ class _LoginScreenState extends State<loginScreen> {
                     // Email input field
                     TextField(
                       controller: _emailController,
+                      focusNode: _emailFocusNode,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Gmail',
                         hintText: 'Enter your email',
-                        hintStyle: TextStyle(
+                        hintStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.grey,
                         ),
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
-                        border: OutlineInputBorder(
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _emailFocusNode.hasFocus ||
+                                    _emailController.text.isNotEmpty
+                                ? const Color(0xFFB4BA1C)
+                                : Colors.black,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: const Color(0xFFB4BA1C),
+                            width: 1.0,
+                          ),
                           borderRadius: BorderRadius.all(Radius.circular(30)),
                         ),
                       ),
@@ -87,6 +130,7 @@ class _LoginScreenState extends State<loginScreen> {
                     // Password input field with visibility toggle
                     TextField(
                       controller: _passwordController,
+                      focusNode: _passwordFocusNode,
                       obscureText: !_passwordVisible,
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -99,7 +143,21 @@ class _LoginScreenState extends State<loginScreen> {
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
-                        border: const OutlineInputBorder(
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: _passwordFocusNode.hasFocus ||
+                                    _passwordController.text.isNotEmpty
+                                ? const Color(0xFFB4BA1C)
+                                : Colors.black,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: const Color(0xFFB4BA1C),
+                            width: 1.0,
+                          ),
                           borderRadius: BorderRadius.all(Radius.circular(30)),
                         ),
                         suffixIcon: IconButton(
@@ -196,8 +254,7 @@ class _LoginScreenState extends State<loginScreen> {
         msg: 'Please enter both email and password.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.SNACKBAR,
-        backgroundColor: const Color(
-            0xFFB4BA1C), // Set background color to Color(0xFFB4BA1C)
+        backgroundColor: const Color(0xFFB4BA1C), // Background color
         textColor: Colors.white, // White text color
         fontSize: 14.0,
       );
@@ -227,7 +284,7 @@ class _LoginScreenState extends State<loginScreen> {
       }
     } else {
       Fluttertoast.showToast(
-        msg: 'Please enter both email and password.',
+        msg: 'Invalid email or password.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.SNACKBAR,
         backgroundColor: const Color(
@@ -236,12 +293,5 @@ class _LoginScreenState extends State<loginScreen> {
         fontSize: 14.0,
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
