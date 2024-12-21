@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_project/User/UserTabs/addMySong.dart';
+import 'package:flutter_project/User/UserTabs/addMySong.dart'; // Import MainChordsAndLyrics page
+import 'package:flutter_project/User/UserTabs/mysonglyricsandchords.dart';
 import 'userEditMySong.dart'; // Import the UserMySongEdit page
 
 class Mysongs extends StatefulWidget {
@@ -30,9 +31,18 @@ class _MysongsState extends State<Mysongs> {
         songs = snapshot.docs.map((doc) {
           return {
             'id': doc.id,
-            'title': doc['songTitle'],
-            'artist': doc['songArtist'],
+            'title': doc['songTitle'] ?? 'Untitled', // Default value if null
+            'artist': doc['songArtist'] ?? 'Unknown', // Default value if null
             'image': 'lib/Images/bible.jpg', // Default local image
+            'songTitle':
+                doc['songTitle'] ?? 'Untitled', // Default value if null
+            'songArtist':
+                doc['songArtist'] ?? 'Unknown', // Default value if null
+            'songOriginalKey':
+                doc['songOriginalKey'] ?? 'C', // Default value if null
+            'songLink': doc['songLink'] ?? '', // Default value if null
+            'songChordsAndLyrics':
+                doc['songChordsAndLyrics'] ?? '', // Default value if null
           };
         }).toList();
         filteredSongs = songs;
@@ -77,7 +87,7 @@ class _MysongsState extends State<Mysongs> {
         .then((doc) {
       if (doc.exists) {
         // Get the data from the document
-        final songData = doc.data() as Map<String, dynamic>?;
+        final songData = doc.data();
 
         if (songData != null) {
           // Pass the song data and the document ID to the edit screen
@@ -187,6 +197,21 @@ class _MysongsState extends State<Mysongs> {
                           color: Color(0xFFB4BA1C),
                         ),
                       ),
+                      // Add onTap to navigate to MainChordsAndLyrics page
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Mysonglyricsandchords(
+                              songTitle: song['songTitle'],
+                              songArtist: song['songArtist'],
+                              songOriginalKey: song['songOriginalKey'],
+                              songLink: song['songLink'],
+                              songChordsAndLyrics: song['songChordsAndLyrics'],
+                            ),
+                          ),
+                        );
+                      },
                       trailing: PopupMenuButton<String>(
                         icon: Icon(
                           Icons.more_vert,

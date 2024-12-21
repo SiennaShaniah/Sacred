@@ -40,18 +40,10 @@ class _EditSongState extends State<EditSong> {
     'Mj Flores'
   ]; // Example artist list
   final List<String> keys = [
-    'C',
-    'C#',
-    'D',
-    'D#',
-    'E',
-    'F',
-    'F#',
-    'G',
-    'G#',
-    'A',
-    'A#',
-    'B'
+    'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#',
+    'B', // Major keys
+    'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m',
+    'Bm' // Minor keys
   ];
   final List<String> songTypes = ['Praise And Worship', 'Hymnal'];
   final List<String> languages = ['English', 'Tagalog', 'Cebuano'];

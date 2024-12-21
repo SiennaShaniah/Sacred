@@ -82,7 +82,7 @@ class _UserDashboardState extends State<UserDashboard> {
           ],
         ),
       ),
-      drawer: Container(
+      drawer: SizedBox(
         width: 325,
         child: Drawer(
           backgroundColor: Colors.white,

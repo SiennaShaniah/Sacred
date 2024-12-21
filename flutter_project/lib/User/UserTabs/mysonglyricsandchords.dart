@@ -2,27 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import the url_launcher package
 import 'dart:async'; // For Timer
 
-class MainChordsAndLyrics extends StatefulWidget {
-  final String title;
-  final String artist;
-  final String originalkey;
-  final String link;
-  final String chordsAndLyrics;
+class Mysonglyricsandchords extends StatefulWidget {
+  final String songTitle;
+  final String songArtist;
+  final String songOriginalKey;
+  final String songLink;
+  final String songChordsAndLyrics;
 
-  const MainChordsAndLyrics({
+  const Mysonglyricsandchords({
     Key? key,
-    required this.title,
-    required this.artist,
-    required this.originalkey,
-    required this.link,
-    required this.chordsAndLyrics,
+    required this.songTitle,
+    required this.songArtist,
+    required this.songOriginalKey,
+    required this.songLink,
+    required this.songChordsAndLyrics,
   }) : super(key: key);
 
   @override
-  _MainChordsAndLyricsState createState() => _MainChordsAndLyricsState();
+  _mysonglyricsandchordsstate createState() => _mysonglyricsandchordsstate();
 }
 
-class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
+class _mysonglyricsandchordsstate extends State<Mysonglyricsandchords> {
   bool isPlaying = false; // To toggle between play and pause state
   late ScrollController _scrollController;
   double _fontSize = 16.0; // Default font size for lyrics
@@ -36,7 +36,7 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
 
   // Function to launch URL
   Future<void> _launchURL() async {
-    final url = widget.link;
+    final url = widget.songLink;
     if (await canLaunch(url)) {
       await launch(url); // Open the link in the browser
     } else {
@@ -117,7 +117,7 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.title, // Song Title
+              widget.songTitle, // Song Title
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -126,7 +126,7 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
             ),
             const SizedBox(height: 4),
             Text(
-              widget.artist, // Song Artist
+              widget.songArtist, // Song Artist
               style: const TextStyle(
                 fontSize: 16,
                 color: Color.fromARGB(255, 73, 69, 69),
@@ -150,28 +150,6 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
             icon: const Icon(Icons.zoom_out, color: Color(0xFF363636)),
             onPressed: _zoomOut, // Handle zoom-out action
           ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF363636)),
-            onSelected: (value) {
-              if (value == 'Add to lineup') {
-                // Show lineup dialog
-              } else if (value == 'Add to favorites') {
-                // Add to favorites logic
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'Add to lineup',
-                  child: Text('Add to lineup'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'Add to favorites',
-                  child: Text('Add to favorites'),
-                ),
-              ];
-            },
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -184,7 +162,7 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
               const SizedBox(height: 20),
               // Display the original key
               Text(
-                'Original Key: ${widget.originalkey}', // Show the original key from the database
+                'Original Key: ${widget.songOriginalKey}', // Show the original key from the database
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.normal,
@@ -195,7 +173,7 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
                   height: 10), // Space between the original key and lyrics
               // Display the lyrics directly from the database
               Text(
-                widget.chordsAndLyrics,
+                widget.songChordsAndLyrics,
                 style: TextStyle(
                     fontSize: _fontSize,
                     color: Colors.black), // Adjust font size

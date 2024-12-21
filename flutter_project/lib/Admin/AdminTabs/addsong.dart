@@ -34,18 +34,10 @@ class _AddSongTabState extends State<AddSongTab> {
   // Dropdown options
   List<String> artists = [];
   final List<String> keys = [
-    'C',
-    'C#',
-    'D',
-    'D#',
-    'E',
-    'F',
-    'F#',
-    'G',
-    'G#',
-    'A',
-    'A#',
-    'B'
+    'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#',
+    'B', // Major keys
+    'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m',
+    'Bm' // Minor keys
   ];
   final List<String> songTypes = ['Praise And Worship', 'Hymnal'];
   final List<String> languages = ['English', 'Tagalog', 'Cebuano'];
@@ -73,7 +65,7 @@ class _AddSongTabState extends State<AddSongTab> {
       await _firestore.collection('songs').add({
         'title': _songTitleController.text,
         'artist': selectedArtist,
-        'key': selectedKey,
+        'originalkey': selectedKey,
         'chordsAndLyrics': _chordsAndLyricsController.text,
         'type': selectedSongType,
         'language': selectedLanguage,

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Favorites extends StatefulWidget {
@@ -26,31 +27,49 @@ class _FavoritesState extends State<Favorites> {
 
   Future<void> fetchFavoriteSongs() async {
     try {
-      final querySnapshot = await _firestore
-          .collection('songs')
-          .where('isFavorite', isEqualTo: true)
-          .get();
+      // Get the current logged-in user's ID
+      final userId = FirebaseAuth.instance.currentUser?.uid;
 
-      setState(() {
-        favoriteSongs = querySnapshot.docs.map((doc) {
-          return {
-            'title': doc['title'],
-            'artist': doc['artist'],
-            'image': doc['imagePath'],
-            'isFavorite': doc['isFavorite'] ?? false,
-            'id': doc.id,
-            'type': doc['type'],
-            'language': doc['language'],
-          };
-        }).toList();
+      if (userId != null) {
+        print('Fetching favorite songs for user: $userId'); // Debugging user ID
 
-        filteredSongs = List.from(favoriteSongs);
+        final querySnapshot = await _firestore
+            .collection('songs')
+            .where('isFavorite', isEqualTo: true)
+            .where('userId', isEqualTo: userId) // Filter by user ID
+            .get();
 
-        artists = favoriteSongs
-            .map((song) => song['artist'] as String)
-            .toSet()
-            .toList();
-      });
+        if (querySnapshot.docs.isEmpty) {
+          print('No favorite songs found for user'); // Debugging: No data found
+        } else {
+          print(
+              'Found ${querySnapshot.docs.length} favorite songs'); // Debugging query results
+        }
+
+        setState(() {
+          favoriteSongs = querySnapshot.docs.map((doc) {
+            return {
+              'title': doc['title'],
+              'artist': doc['artist'],
+              'image': doc['imagePath'],
+              'isFavorite': doc['isFavorite'] ?? false,
+              'id': doc.id,
+              'type': doc['type'],
+              'language': doc['language'],
+            };
+          }).toList();
+
+          filteredSongs = List.from(favoriteSongs);
+
+          // Get unique artists for filtering
+          artists = favoriteSongs
+              .map((song) => song['artist'] as String)
+              .toSet()
+              .toList();
+        });
+      } else {
+        print('User is not logged in'); // Debugging: No user logged in
+      }
     } catch (e) {
       print('Error fetching favorite songs: $e');
     }
@@ -241,7 +260,7 @@ class _FavoritesState extends State<Favorites> {
                     _filterByArtist(artist);
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );

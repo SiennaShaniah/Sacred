@@ -43,6 +43,7 @@ dependencies:
   file_picker: ^8.1.4
   fl_chart: ^0.69.2
   intl: ^0.20.1 
+  url_launcher: ^6.1.5 
 
 
 dev_dependencies:

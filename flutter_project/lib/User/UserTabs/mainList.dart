@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'lyricsChords.dart';
 
 class MainList extends StatefulWidget {
   const MainList({super.key});
@@ -23,23 +25,50 @@ class _MainListState extends State<MainList> {
   }
 
   Future<void> fetchSongs() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      print("User not authenticated");
+      return;
+    }
+
     try {
       final querySnapshot =
           await FirebaseFirestore.instance.collection('songs').get();
 
-      setState(() {
-        songs = querySnapshot.docs.map((doc) {
-          return {
-            'title': doc['title'],
-            'artist': doc['artist'],
-            'image': doc['imagePath'],
-            'isFavorite': doc['isFavorite'] ?? false,
-            'id': doc.id,
-            'type': doc['type'],
-            'language': doc['language'],
-          };
-        }).toList();
+      final fetchedSongs = querySnapshot.docs.map((doc) async {
+        var artistName = 'Unknown';
+        if (doc['artist'] != null) {
+          artistName = doc['artist'];
+        }
 
+        // Check if the song is in the user's favorites
+        final favoritesSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('favorites')
+            .doc(doc.id)
+            .get();
+
+        bool isFavorite = favoritesSnapshot.exists;
+
+        return {
+          'title': doc['title'],
+          'artist': artistName,
+          'image': doc['imagePath'],
+          'isFavorite': isFavorite,
+          'id': doc.id,
+          'type': doc['type'],
+          'language': doc['language'],
+          'originalkey': doc['originalkey'],
+          'link': doc['link'],
+          'chordsAndLyrics': doc['chordsAndLyrics'],
+        };
+      }).toList();
+
+      final resolvedSongs = await Future.wait(fetchedSongs);
+
+      setState(() {
+        songs = resolvedSongs;
         filteredSongs = List.from(songs);
         artists =
             songs.map((song) => song['artist'] as String).toSet().toList();
@@ -221,7 +250,7 @@ class _MainListState extends State<MainList> {
                     _filterByArtist(artist);
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -229,13 +258,40 @@ class _MainListState extends State<MainList> {
     );
   }
 
-  Future<void> toggleFavorite(String songId, bool currentFavoriteStatus) async {
-    try {
-      await FirebaseFirestore.instance.collection('songs').doc(songId).update({
-        'isFavorite': !currentFavoriteStatus,
-      });
+  Future<void> toggleFavorite(String songId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      print("User not authenticated");
+      return;
+    }
 
-      fetchSongs();
+    final favoritesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('favorites');
+    final songIndex = filteredSongs.indexWhere((song) => song['id'] == songId);
+
+    if (songIndex == -1) return;
+
+    final isCurrentlyFavorite = filteredSongs[songIndex]['isFavorite'];
+
+    try {
+      if (isCurrentlyFavorite) {
+        // If the song is already in favorites, remove it
+        await favoritesRef.doc(songId).delete();
+        setState(() {
+          filteredSongs[songIndex]['isFavorite'] = false;
+        });
+      } else {
+        // If the song is not in favorites, add it
+        await favoritesRef.doc(songId).set({
+          'songId': songId,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        setState(() {
+          filteredSongs[songIndex]['isFavorite'] = true;
+        });
+      }
     } catch (e) {
       print("Error updating favorite: $e");
     }
@@ -314,46 +370,59 @@ class _MainListState extends State<MainList> {
                   elevation: 4.0,
                   margin: const EdgeInsets.symmetric(vertical: 10.0),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.all(16.0),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: 100,
-                        height: 100,
-                        child: Image.network(
-                          song['image'] ?? '',
-                          fit: BoxFit.cover,
+                      contentPadding: const EdgeInsets.all(16.0),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 100,
+                          height: 100,
+                          child: Image.network(
+                            song['image'] ?? '',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    title: Text(
-                      song['title']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                      title: Text(
+                        song['title']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      song['artist']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFFB4BA1C),
+                      subtitle: Text(
+                        song['artist']!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFB4BA1C),
+                        ),
                       ),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(
-                        song['isFavorite']
-                            ? Icons.bookmark
-                            : Icons.bookmark_border,
-                        color: song['isFavorite']
-                            ? const Color(0xFFB4BA1C)
-                            : Colors.grey,
+                      trailing: IconButton(
+                        icon: Icon(
+                          song['isFavorite']
+                              ? Icons.bookmark
+                              : Icons.bookmark_border,
+                          color: song['isFavorite']
+                              ? const Color(0xFFB4BA1C)
+                              : Colors.grey,
+                        ),
+                        onPressed: () {
+                          toggleFavorite(song['id']);
+                        },
                       ),
-                      onPressed: () {
-                        toggleFavorite(song['id'], song['isFavorite']);
-                      },
-                    ),
-                  ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MainChordsAndLyrics(
+                              title: song['title'],
+                              artist: song['artist'],
+                              originalkey: song['originalkey'],
+                              link: song['link'],
+                              chordsAndLyrics: song['chordsAndLyrics'],
+                            ),
+                          ),
+                        );
+                      }),
                 );
               },
             ),
