@@ -109,12 +109,12 @@ class _MainChordsAndLyricsState extends State<MainChordsAndLyrics> {
           .get();
 
       List<Map<String, dynamic>> lineups = [];
-      snapshot.docs.forEach((doc) {
+      for (var doc in snapshot.docs) {
         lineups.add({
           'lineUpName': doc['lineUpName'],
           'lineUpId': doc.id,
         });
-      });
+      }
 
       print("Fetched lineups: $lineups"); // Debugging line
       return lineups;
